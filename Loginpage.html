@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Protokol HT</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4 font-sans">
+
+    <div class="bg-white p-8 rounded-2xl shadow-md border border-slate-200 w-full max-w-md">
+        <!-- Logo / Icon -->
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-xs">
+                <i class="fa-solid fa-lock text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900">Akses Terbatas</h2>
+            <p class="text-sm text-slate-500 mt-1">silahkan masukan data akses</p>
+        </div>
+
+        <!-- Form Login -->
+        <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Username</label>
+                <input type="text" id="username" required autocomplete="off"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100 transition-all text-sm">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Password</label>
+                <input type="password" id="password" required
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100 transition-all text-sm">
+            </div>
+
+            <!-- Pesan Error -->
+            <p id="errorMessage" class="text-rose-600 text-xs font-medium hidden text-center">
+                <i class="fa-solid fa-circle-exclamation mr-1"></i> Username atau Password salah!
+            </p>
+
+            <button type="submit" 
+                class="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-sm cursor-pointer">
+                Masuk ke Tools
+            </button>
+        </form>
+
+        <div class="text-center mt-6">
+            <a href="Page.html" class="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- SCRIPT VALIDASI LOGIN -->
+    <script>
+        function handleLogin(event) {
+            event.preventDefault(); // Mencegah reload halaman saat submit
+
+            const userIn = document.getElementById('username').value;
+            const passIn = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMessage');
+
+            // --- PENGATURAN USERNAME & PASSWORD ---
+            // Kamu bisa ganti "admin" & "posyandu2026" sesuai keinginanmu
+            if (userIn === "dokter" && passIn === "User@123") {
+                errorMsg.classList.add('hidden');
+                
+                // Jika benar, arahkan ke file tools posyandu kamu yang asli
+                window.location.href = "pengembangan.html"; 
+            } else {
+                // Jika salah, tampilkan pesan error
+                errorMsg.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

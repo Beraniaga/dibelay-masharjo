@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Risiko Kardiovaskular berdasarkan carta</title>
+    <style>
+        :root {
+            --primary-color: #008080;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-dark: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px; /* Disesuaikan karena subtitle dihapus */
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .row-flex {
+            display: flex;
+            gap: 15px;
+        }
+
+        .row-flex .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #444;
+            font-size: 14px;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        /* Desain badge nilai IMT Otomatis */
+        .imt-live-box {
+            background-color: #e8f4f4;
+            border-left: 4px solid var(--primary-color);
+            padding: 10px 15px;
+            margin-top: 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: none;
+        }
+
+        .btn-hitung {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-top: 10px;
+        }
+
+        .btn-hitung:hover {
+            background-color: #005a5a;
+        }
+        
+        .btn-hitung:active {
+            transform: scale(0.99);
+        }
+
+        /* Tampilan Utama Kotak Hasil Komplit */
+        .output-container {
+            margin-top: 25px;
+            display: none;
+        }
+
+        .result-box {
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        /* Detail Ringkasan Parameter Elegan di bagian bawah */
+        .detail-box {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .detail-title {
+            font-weight: bold;
+            color: var(--text-dark);
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .detail-item {
+            padding: 6px 0;
+        }
+
+        .detail-label {
+            color: #7f8c8d;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .detail-val {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Tema Warna Risiko */
+        .hijau { background-color: #2ecc71; color: white; }
+        .kuning { background-color: #f1c40f; color: #2c3e50; }
+        .jingga { background-color: #e67e22; color: white; }
+        .merah { background-color: #e74c3c; color: white; }
+        .merah_tua { background-color: #8b0000; color: white; }
+
+        /* ==========================================
+           STYLING BARU: FOOTER BRANDING LOGO
+           ========================================== */
+        footer {
+            margin-top: 35px;
+            border-top: 1px solid #eef2f1;
+            padding-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #888;
+            user-select: none;
+        }
+
+        .footer-logo-box {
+            display: flex;
+            align-items: center;
+            position: relative;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+
+        /* Tag pembuka <span mini */
+        .f-tag-open {
+            position: absolute;
+            left: -32px;
+            top: -10px;
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        /* Kurung siku < mini */
+        .f-bracket-left {
+            font-size: 24px;
+            margin-right: 1px;
+        }
+
+        /* Lensa kacamata mini */
+        .f-lens {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(0, 128, 128, 0.05);
+        }
+
+        /* Jembatan kacamata mini */
+        .f-bridge {
+            width: 6px;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        /* Kurung siku > mini */
+        .f-bracket-right {
+            font-size: 24px;
+            margin-left: 1px;
+        }
+
+        /* Tag penutup </span> mini */
+        .f-tag-close {
+            position: absolute;
+            right: -28px;
+            bottom: -10px;
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        /* Teks Nama Brand Samping Kacamata */
+        .f-brand-text {
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+            font-family: sans-serif;
+        }
+
+        .f-brand-main {
+            color: #444;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .f-brand-sub {
+            color: var(--primary-color);
+            font-size: 13px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Kalkulator Risiko Penyakit Kardiovaskular</h2>
+
+    <div class="form-group">
+        <label for="mode_penilaian">Metode Penilaian</label>
+        <select id="mode_penilaian" onchange="handleUIPilihanMode()">
+            <option value="M_LAB">Dengan Hasil Laboratorium (Kolesterol)</option>
+            <option value="M_IMT">Tanpa Hasil Laboratorium (IMT / Indeks Massa Tubuh)</option>
+        </select>
+    </div>
+
+    <div id="wrapper_diabetes" class="form-group">
+        <label for="diabetes">Status Diabetes Melitus (DM)</label>
+        <select id="diabetes">
+            <option value="tanpa_dm">Tanpa Diabetes</option>
+            <option value="dengan_dm">Dengan Diabetes</option>
+        </select>
+    </div>
+
+    <div class="row-flex">
+        <div class="form-group">
+            <label for="usia_riil">Usia Pasien (Tahun)</label>
+            <input type="number" id="usia_riil" min="40" max="74" placeholder="Contoh: 45">
+        </div>
+        <div class="form-group">
+            <label for="gender">Jenis Kelamin</label>
+            <select id="gender">
+                <option value="L">Laki-laki</option>
+                <option value="P">Perempuan</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row-flex">
+        <div class="form-group">
+            <label for="merokok">Status Merokok</label>
+            <select id="merokok">
+                <option value="tidak">Tidak Merokok</option>
+                <option value="ya">Merokok</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="sistolik_riil">Tekanan Darah Sistolik (mmHg)</label>
+            <input type="number" id="sistolik_riil" placeholder="Contoh: 135">
+        </div>
+    </div>
+
+    <div id="wrapper_kolesterol" class="form-group">
+        <label for="kolesterol_riil">Kadar Kolesterol Total (mg/dL)</label>
+        <input type="number" id="kolesterol_riil" placeholder="Contoh: 210">
+    </div>
+
+    <div id="wrapper_imt" style="display: none;">
+        <div class="row-flex">
+            <div class="form-group">
+                <label for="berat_badan">Berat Badan (kg)</label>
+                <input type="number" id="berat_badan" step="0.1" placeholder="Contoh: 65" oninput="hitungIMTOtomatis()">
+            </div>
+            <div class="form-group">
+                <label for="tinggi_badan">Tinggi Badan (cm)</label>
+                <input type="number" id="tinggi_badan" step="0.1" placeholder="Contoh: 165" oninput="hitungIMTOtomatis()">
+            </div>
+        </div>
+        <div class="form-group">
+            <div id="imt_live_badge" class="imt-live-box">
+                Hasil Perhitungan IMT: <span id="imt_live_val">0.0</span> kg/m²
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-hitung" onclick="hitungRisikoKardiovaskular()">HITUNG RISIKO</button>
+
+    <div id="output_container" class="output-container">
+        <div id="result" class="result-box">
+            Tingkat Risiko Pasien: <span id="result-value"></span>
+        </div>
+        
+        <div class="detail-box">
+            <div class="detail-title">Detail Pengelompokan Data Pasien</div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Kelompok Usia</span>
+                    <span id="lbl_klp_usia" class="detail-val">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Kelompok Tekanan Darah Sistol</span>
+                    <span id="lbl_klp_sistol" class="detail-val">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label" id="lbl_dynamic_header">Kelompok Kolesterol Total</span>
+                    <span id="lbl_klp_kondisi_khusus" class="detail-val">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Profil Pasien</span>
+                    <span id="lbl_klp_profil" class="detail-val">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <span></span>
+        <div class="footer-logo-box">
+            <span class="f-tag-open">created by :</span>
+            <div class="f-bracket-left">&lt;</div>
+            <div class="f-lens">m</div>
+            <div class="f-bridge"></div>
+            <div class="f-lens">m</div>
+            <div class="f-bracket-right">&gt;</div>
+            <span class="f-brand-main">Mangoton</span>
+            <span class="f-brand-sub">.tech</span>
+        </div>
+    </footer>
+</div>
+
+<script>
+// Global variables untuk menyimpan nilai imt terhitung secara real-time
+let globalComputedIMT = 0;
+
+// ==========================================
+// DATA MATRIKS I: DENGAN HASIL LAB (40 KOLOM)
+// ==========================================
+const databaseLab = {
+    "40-44": [
+        ["hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau", "hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","jingga","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning"],
+        ["hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","kuning","kuning","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","kuning", "hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning","jingga","jingga","hijau","hijau","hijau","hijau","kuning","kuning","kuning","jingga","jingga","jingga"],
+        ["hijau","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","hijau","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning", "kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","hijau","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga"],
+        ["hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning","jingga","jingga","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning", "kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","merah","merah","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga"],
+        ["kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","hijau","hijau","hijau","kuning","kuning","kuning","kuning","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah_tua","kuning","kuning","jingga","jingga","jingga","jingga","merah","merah","merah","merah"]
+    ],
+    "45-49": [
+        ["hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","kuning","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","hijau","kuning", "hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","jingga"],
+        ["hijau","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","hijau","hijau","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning", "kuning","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","jingga","jingga"],
+        ["hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning","kuning","jingga","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning", "kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","merah","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga"],
+        ["kuning","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning","jingga","jingga", "kuning","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","kuning","kuning","kuning","jingga","jingga","jingga","jingga","merah","merah","merah"],
+        ["kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","merah","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah_tua","merah_tua","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah_tua"]
+    ],
+    "50-54": [
+        ["hijau","hijau","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","hijau","hijau","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning", "hijau","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","hijau","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga"],
+        ["hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning","kuning","jingga","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning", "kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga"],
+        ["hijau","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning","kuning","jingga", "kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","merah"],
+        ["kuning","kuning","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","kuning","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah_tua","kuning","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah"],
+        ["kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga", "kuning","kuning","kuning","merah","merah","merah","merah","merah_tua","merah_tua","merah_tua","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah_tua","merah_tua"]
+    ],
+    "55-59": [
+        ["hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning","kuning","kuning","hijau","hijau","hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning", "kuning","kuning","kuning","kuning","jingga","kuning","jingga","jingga","jingga","jingga","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga"],
+        ["kuning","kuning","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","hijau","hijau","hijau","kuning","kuning","kuning","kuning","kuning","kuning","kuning", "kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga"],
+        ["kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","kuning","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah"],
+        ["kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","merah","merah","merah","merah","merah","merah_tua","merah_tua","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah_tua"],
+        ["jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","merah", "jingga","merah","merah","merah","merah_tua","merah","merah_tua","merah_tua","merah_tua","merah_tua","jingga","jingga","jingga","jingga","merah","merah","merah","merah_tua","merah_tua","merah_tua"]
+    ],
+    "60-64": [
+        ["kuning","kuning","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","hijau","kuning","kuning","kuning","kuning","kuning","kuning","kuning","kuning","jingga", "kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga"],
+        ["kuning","kuning","kuning","kuning","jingga","kuning","jingga","jingga","jingga","jingga","kuning","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","jingga","jingga","jingga","jingga","jingga","jingga","indigo","jingga","merah","merah"],
+        ["kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah","merah_tua","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah"],
+        ["jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga", "jingga","jingga","merah","merah","merah","merah","merah","merah_tua","merah_tua","merah_tua","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah_tua","merah_tua"],
+        ["jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah","merah_tua","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah", "merah","merah","merah","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","jingga","merah","merah","merah","merah","merah","merah","merah_tua","merah_tua","merah_tua"]
+    ],
+    "65-69": [
+        ["kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","jingga","kuning","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah"],
+        ["kuning","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","kuning","kuning","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","merah","jingga","merah","merah","merah","merah_tua","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah"],
+        ["jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","kuning","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga", "jingga","jingga","merah","merah","merah","merah","merah","merah","merah_tua","merah_tua","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah_tua"],
+        ["jingga","jingga","jingga","merah","merah","merah","merah","merah","merah","merah_tua","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah", "merah","merah","merah","merah_tua","merah_tua","merah","merah_tua","merah_tua","merah_tua","merah_tua","jingga","merah","merah","merah","merah","merah","merah_tua","merah_tua","merah_tua","merah_tua"],
+        ["jingga","merah","merah","merah","merah","merah","merah","merah_tua","merah_tua","merah_tua","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah", "merah","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah","merah","merah","merah","merah","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua"]
+    ],
+    "70-74": [
+        ["jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","kuning","kuning","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","merah","jingga","merah","merah","merah","merah","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah"],
+        ["jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga","jingga", "jingga","jingga","merah","merah","merah","merah","merah","merah","merah_tua","merah_tua","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah","merah"],
+        ["jingga","jingga","jingga","merah","merah","merah","merah","merah","merah","merah_tua","jingga","jingga","jingga","jingga","jingga","jingga","jingga","merah","merah","merah", "merah","merah","merah","merah","merah_tua","merah","merah_tua","merah_tua","merah_tua","merah_tua","merah","merah","merah","merah","merah","merah","merah","merah_tua","merah_tua","merah_tua"],
+        ["jingga","merah","merah","merah","merah","merah","merah","merah_tua","merah_tua","merah_tua","jingga","jingga","jingga","jingga","jingga","merah","merah","merah","merah","merah", "merah","merah","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah","merah","merah","merah","merah","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua"],
+        ["merah","merah","merah","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","jingga","jingga","merah","merah","merah","merah","merah","merah","merah_tua","merah_tua", "merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah","merah","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua","merah_tua"]
+    ]
+};
+
+// ==========================================
+// DATA MATRIKS II: TANPA HASIL LAB / IMT (20 KOLOM)
+// ==========================================
+const databaseIMT = {
+    "40-44": [
+        ["hijau","hijau","hijau","hijau","hijau", "hijau","hijau","hijau","hijau","kuning", "hijau","hijau","hijau","hijau","hijau", "hijau","hijau","hijau","hijau","hijau"],
+        ["hijau","hijau","hijau","hijau","hijau", "hijau","hijau","kuning","kuning","kuning", "hijau","hijau","hijau","hijau","hijau", "hijau","hijau","hijau","kuning","kuning"],
+        ["hijau","hijau","hijau","hijau","hijau", "kuning","kuning","kuning","kuning","jingga", "hijau","hijau","hijau","hijau","hijau", "kuning","kuning","kuning","kuning","kuning"],
+        ["hijau","hijau","kuning","kuning","kuning", "kuning","kuning","kuning","jingga","jingga", "hijau","hijau","hijau","hijau","hijau", "kuning","kuning","kuning","kuning","kuning"],
+        ["kuning","kuning","kuning","kuning","kuning", "kuning","jingga","jingga","jingga","jingga", "hijau","hijau","hijau","kuning","kuning", "kuning","kuning","jingga","jingga","jingga"]
+    ],
+    "45-49": [
+        ["hijau","hijau","hijau","hijau","hijau", "hijau","hijau","hijau","kuning","kuning", "hijau","hijau","hijau","hijau","hijau", "hijau","hijau","hijau","hijau","kuning"],
+        ["hijau","hijau","hijau","hijau","hijau", "kuning","kuning","kuning","kuning","kuning", "hijau","hijau","hijau","hijau","hijau", "hijau","hijau","kuning","kuning","kuning"],
+        ["hijau","hijau","hijau","kuning","kuning", "kuning","kuning","kuning","jingga","jingga", "hijau","hijau","hijau","hijau","hijau", "kuning","kuning","kuning","kuning","kuning"],
+        ["kuning","kuning","kuning","kuning","kuning", "kuning","jingga","jingga","jingga","jingga", "hijau","hijau","hijau","kuning","kuning", "kuning","kuning","kuning","jingga","jingga"],
+        ["kuning","kuning","kuning","jingga","jingga", "jingga","jingga","jingga","merah","merah", "kuning","kuning","kuning","kuning","kuning", "jingga","jingga","jingga","jingga","jingga"]
+    ],
+    "50-54": [
+        ["hijau","hijau","hijau","hijau","hijau", "kuning","kuning","kuning","kuning","kuning", "hijau","hijau","hijau","hijau","hijau", "hijau","hijau","hijau","kuning","kuning"],
+        ["hijau","hijau","hijau","kuning","kuning", "kuning","kuning","kuning","jingga","jingga", "hijau","hijau","hijau","hijau","hijau", "kuning","kuning","kuning","kuning","kuning"],
+        ["hijau","kuning","kuning","kuning","kuning", "kuning","jingga","jingga","jingga","jingga", "hijau","hijau","hijau","kuning","kuning", "kuning","kuning","kuning","kuning","jingga"],
+        ["kuning","kuning","kuning","kuning","jingga", "jingga","jingga","jingga","jingga","merah", "kuning","kuning","kuning","kuning","kuning", "kuning","kuning","jingga","jingga","jingga"],
+        ["jingga","jingga","jingga","jingga","jingga", "jingga","jingga","merah","merah","merah", "kuning","kuning","kuning","kuning","jingga", "jingga","jingga","jingga","jingga","jingga"]
+    ],
+    "55-59": [
+        ["hijau","hijau","hijau","kuning","kuning", "kuning","kuning","kuning","jingga","jingga", "hijau","hijau","hijau","hijau","hijau", "kuning","kuning","kuning","kuning","kuning"],
+        ["kuning","kuning","kuning","kuning","kuning", "kuning","jingga","jingga","jingga","jingga", "hijau","hijau","hijau","kuning","kuning", "kuning","kuning","kuning","kuning","jingga"],
+        ["kuning","kuning","kuning","jingga","jingga", "jingga","jingga","jingga","jingga","merah", "kuning","kuning","kuning","kuning","kuning", "kuning","jingga","jingga","jingga","jingga"],
+        ["jingga","jingga","jingga","jingga","jingga", "jingga","jingga","merah","merah","merah", "kuning","kuning","kuning","jingga","jingga", "jingga","jingga","jingga","jingga","jingga"],
+        ["jingga","jingga","merah","merah","merah", "merah","merah","merah","merah_tua","merah_tua", "kuning","kuning","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","merah"]
+    ],
+    "60-64": [
+        ["kuning","kuning","kuning","kuning","kuning", "kuning","jingga","jingga","jingga","jingga", "kuning","kuning","kuning","kuning","kuning", "kuning","kuning","kuning","jingga","jingga"],
+        ["kuning","kuning","kuning","jingga","jingga", "jingga","jingga","jingga","merah","merah", "kuning","kuning","kuning","kuning","kuning", "kuning","jingga","jingga","jingga","jingga"],
+        ["jingga","jingga","jingga","jingga","jingga", "jingga","jingga","merah","merah","merah", "kuning","kuning","kuning","jingga","jingga", "jingga","jingga","jingga","jingga","jingga"],
+        ["jingga","jingga","jingga","merah","merah", "merah","merah","merah","merah_tua","merah_tua", "kuning","kuning","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","merah"],
+        ["merah","merah","merah","merah","merah_tua", "merah_tua","merah_tua","merah_tua","merah_tua","merah_tua", "jingga","jingga","jingga","jingga","jingga", "jingga","jingga","merah","merah","merah"]
+    ],
+    "65-69": [
+        ["kuning","kuning","jingga","jingga","jingga", "jingga","jingga","jingga","merah","merah", "kuning","kuning","kuning","kuning","kuning", "jingga","jingga","jingga","jingga","jingga"],
+        ["jingga","jingga","jingga","jingga","jingga", "jingga","merah","merah","merah","merah", "kuning","kuning","kuning","jingga","jingga", "jingga","jingga","jingga","jingga","jingga"],
+        ["jingga","jingga","jingga","merah","merah", "merah","merah","merah","merah_tua","merah_tua", "kuning","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","merah"],
+        ["merah","merah","merah","merah","merah_tua", "merah_tua","merah_tua","merah_tua","merah_tua","merah_tua", "jingga","jingga","jingga","jingga","jingga", "jingga","jingga","merah","merah","merah"],
+        ["merah","merah_tua","merah_tua","merah_tua","merah_tua", "merah_tua","merah_tua","merah_tua","merah_tua","merah_tua", "jingga","jingga","jingga","jingga","jingga", "merah","merah","merah","merah","merah_tua"]
+    ],
+    "70-74": [
+        ["jingga","jingga","jingga","jingga","jingga", "jingga","merah","merah","merah","merah", "kuning","kuning","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","jingga"],
+        ["jingga","jingga","jingga","merah","merah", "merah","merah","merah","merah_tua","merah_tua", "jingga","jingga","jingga","jingga","jingga", "jingga","jingga","jingga","jingga","merah"],
+        ["merah","merah","merah","merah","merah_tua", "merah_tua","merah_tua","merah_tua","merah_tua","merah_tua", "jingga","jingga","jingga","jingga","jingga", "jingga","jingga","merah","merah","merah"],
+        ["merah","merah_tua","merah_tua","merah_tua","merah_tua", "merah_tua","merah_tua","merah_tua","merah_tua","merah_tua", "jingga","jingga","jingga","jingga","jingga", "merah","merah","merah","merah_tua","merah_tua"],
+        ["merah_tua","merah_tua","merah_tua","merah_tua","merah_tua", "merah_tua","merah_tua","merah_tua","merah_tua","merah_tua", "jingga","jingga","merah","merah","merah", "merah","merah","merah","merah_tua","merah_tua"]
+    ]
+};
+
+// ==========================================
+// FUNGSIONALITAS 1: HITUNG IMT SECARA REAL-TIME
+// ==========================================
+function hitungIMTOtomatis() {
+    let bb = parseFloat(document.getElementById("berat_badan").value);
+    let tb = parseFloat(document.getElementById("tinggi_badan").value);
+    let badge = document.getElementById("imt_live_badge");
+    let valSpan = document.getElementById("imt_live_val");
+
+    if (!isNaN(bb) && !isNaN(tb) && tb > 0) {
+        let tinggiMeter = tb / 100;
+        let imt = bb / (tinggiMeter * tinggiMeter);
+        globalComputedIMT = imt; // simpan ke variabel global
+        
+        valSpan.innerHTML = imt.toFixed(1);
+        badge.style.display = "block";
+    } else {
+        globalComputedIMT = 0;
+        badge.style.display = "none";
+    }
+}
+
+// ==========================================
+// FUNGSIONALITAS 2: LOGIKA UI DINAMIS MODE
+// ==========================================
+function handleUIPilihanMode() {
+    var mode = document.getElementById("mode_penilaian").value;
+    
+    if (mode === "M_LAB") {
+        document.getElementById("wrapper_kolesterol").style.display = "block";
+        document.getElementById("wrapper_diabetes").style.display = "block";
+        document.getElementById("wrapper_imt").style.display = "none";
+        document.getElementById("lbl_dynamic_header").innerHTML = "Kelompok Kolesterol Total";
+    } else {
+        document.getElementById("wrapper_kolesterol").style.display = "none";
+        document.getElementById("wrapper_diabetes").style.display = "none"; // Matriks IMT murni gabungan tanpa pisah kolom diabetes
+        document.getElementById("wrapper_imt").style.display = "block";
+        document.getElementById("lbl_dynamic_header").innerHTML = "Kelompok IMT (Indeks Massa Tubuh)";
+        hitungIMTOtomatis(); // trigger update barangkali data sudah terisi
+    }
+    document.getElementById("output_container").style.display = "none";
+}
+
+// ==========================================
+// FUNGSIONALITAS 3: PROSES UTAMA PREDIKSI & MAPPING
+// ==========================================
+function hitungRisikoKardiovaskular() {
+    var modePenilaian = document.getElementById("mode_penilaian").value;
+    var gender = document.getElementById("gender").value;     
+    var merokok = document.getElementById("merokok").value;   
+    
+    // A. Klasifikasi Umur Pasien
+    var usiaInput = parseInt(document.getElementById("usia_riil").value);
+    if (isNaN(usiaInput)) { alert("Mohon isi umur pasien terlebih dahulu!"); return; }
+    
+    var keyUmur = "";
+    if (usiaInput >= 40 && usiaInput <= 44) keyUmur = "40-44";
+    else if (usiaInput >= 45 && usiaInput <= 49) keyUmur = "45-49";
+    else if (usiaInput >= 50 && usiaInput <= 54) keyUmur = "50-54";
+    else if (usiaInput >= 55 && usiaInput <= 59) keyUmur = "55-59";
+    else if (usiaInput >= 60 && usiaInput <= 64) keyUmur = "60-64";
+    else if (usiaInput >= 65 && usiaInput <= 69) keyUmur = "65-69";
+    else if (usiaInput >= 70 && usiaInput <= 74) keyUmur = "70-74";
+    else { alert("Aplikasi ini divalidasi khusus untuk rentang usia 40-74 tahun."); return; }
+
+    document.getElementById("lbl_klp_usia").innerHTML = "Kategori " + keyUmur + " Tahun";
+
+    // B. Klasifikasi Kategori Tekanan Darah Sistolik
+    var sistolikInput = parseInt(document.getElementById("sistolik_riil").value);
+    if (isNaN(sistolikInput)) { alert("Mohon isi Tekanan Darah Sistolik!"); return; }
+    
+    var indexSistolik = 0;
+    var teksKlpSistol = "";
+    if (sistolikInput > 179) { indexSistolik = 4; teksKlpSistol = ">179 mmHg"; }
+    else if (sistolikInput >= 160) { indexSistolik = 3; teksKlpSistol = "160-179 mmHg"; }
+    else if (sistolikInput >= 140) { indexSistolik = 2; teksKlpSistol = "140-159 mmHg"; }
+    else if (sistolikInput >= 120) { indexSistolik = 1; teksKlpSistol = "120-139 mmHg"; }
+    else { indexSistolik = 0; teksKlpSistol = "<120 mmHg"; }
+
+    document.getElementById("lbl_klp_sistol").innerHTML = teksKlpSistol;
+
+    // C. Setup Label Profil Dasar Pasien
+    var txtProfil = (gender === "L" ? "Laki-laki" : "Perempuan") + " (" + (merokok === "ya" ? "Perokok" : "Bukan Perokok") + ")";
+    document.getElementById("lbl_klp_profil").innerHTML = txtProfil;
+
+    var hasilWarna = "hijau";
+
+    // D. JALUR PERHITUNGAN BERDASARKAN MODE YANG AKTIF
+    if (modePenilaian === "M_LAB") {
+        var diabetes = document.getElementById("diabetes").value;
+        var kolesterolInput = parseInt(document.getElementById("kolesterol_riil").value);
+        if (isNaN(kolesterolInput)) { alert("Mohon isi kadar Kolesterol Total!"); return; }
+        
+        // Klasifikasi Sub-Indeks Kolesterol (0 s.d 4)
+        var subIndexKolesterol = 0;
+        var teksKlpKondisi = "";
+        if (kolesterolInput >= 270) { subIndexKolesterol = 4; teksKlpKondisi = ">= 267 mg/dL (>=7 mmol/L)"; }
+        else if (kolesterolInput >= 230) { subIndexKolesterol = 3; teksKlpKondisi = "229-266.8 mg/dL (6-6.9 mmol/L)"; }
+        else if (kolesterolInput >= 193) { subIndexKolesterol = 2; teksKlpKondisi = "190-228.15 mg/dL (5-5.9 mmol/L)"; }
+        else if (kolesterolInput >= 154) { subIndexKolesterol = 1; teksKlpKondisi = "154.68-189.5 mg/dL (4-4.9 mmol/L)"; }
+        else { subIndexKolesterol = 0; teksKlpKondisi = "< 154.68 mg/dL (<4 mmol/L)"; }
+
+        document.getElementById("lbl_klp_kondisi_khusus").innerHTML = teksKlpKondisi;
+
+        // Hitung lompatan offset koordinat array horizontal (total 40 kolom)
+        var offsetDiabetes = (diabetes === "dengan_dm") ? 20 : 0;
+        var offsetKriteria = 0;
+        if (gender === "L" && merokok === "tidak") offsetKriteria = 0;
+        else if (gender === "L" && merokok === "ya") offsetKriteria = 5;
+        else if (gender === "P" && merokok === "tidak") offsetKriteria = 10;
+        else if (gender === "P" && merokok === "ya") offsetKriteria = 15;
+
+        var indexKolomFinalLab = offsetDiabetes + offsetKriteria + subIndexKolesterol;
+        
+        try {
+            hasilWarna = databaseLab[keyUmur][indexSistolik][indexKolomFinalLab];
+        } catch(e) { hasilWarna = "hijau"; }
+
+    } else {
+        // --- MODE TANPA LAB (MENGGUNAKAN INDEKS MASSA TUBUH) ---
+        if (globalComputedIMT === 0) {
+            alert("Mohon masukkan Berat Badan dan Tinggi Badan dengan benar untuk menghitung IMT!");
+            return;
+        }
+
+        // Klasifikasi Sub-Indeks IMT (0 s.d 4)
+        var subIndexIMT = 0;
+        var teksKlpIMT = "";
+        if (globalComputedIMT > 35) { subIndexIMT = 4; teksKlpIMT = "> 35 (Obesitas Ekstrem)"; }
+        else if (globalComputedIMT >= 30) { subIndexIMT = 3; teksKlpIMT = "30 - 35 (Obesitas)"; }
+        else if (globalComputedIMT >= 25) { subIndexIMT = 2; teksKlpIMT = "25 - 29 (Kelebihan BB)"; }
+        else if (globalComputedIMT >= 20) { subIndexIMT = 1; teksKlpIMT = "20 - 24 (Normal)"; }
+        else { subIndexIMT = 0; teksKlpIMT = "< 20 (Berat Badan Kurang)"; }
+
+        document.getElementById("lbl_klp_kondisi_khusus").innerHTML = globalComputedIMT.toFixed(1) + " [" + teksKlpIMT + "]";
+
+        // Hitung lompatan offset koordinat array horizontal (total 20 kolom)
+        var offsetKriteriaIMT = 0;
+        if (gender === "L" && merokok === "tidak") offsetKriteriaIMT = 0;
+        else if (gender === "L" && merokok === "ya") offsetKriteriaIMT = 5;
+        else if (gender === "P" && merokok === "tidak") offsetKriteriaIMT = 10;
+        else if (gender === "P" && merokok === "ya") offsetKriteriaIMT = 15;
+
+        var indexKolomFinalIMT = offsetKriteriaIMT + subIndexIMT;
+
+        try {
+            hasilWarna = databaseIMT[keyUmur][indexSistolik][indexKolomFinalIMT];
+        } catch(e) { hasilWarna = "hijau"; }
+    }
+
+    // E. OUTPUT HASIL PREDIKSI KE UI INTERFACE
+    var textHasil = "";
+    switch(hasilWarna) {
+        case "hijau": textHasil = "< 5% (Risiko Rendah)"; break;
+        case "kuning": textHasil = "5% s/d < 10% (Risiko Sedang)"; break;
+        case "jingga": textHasil = "10% s/d < 20% (Risiko Tinggi)"; break;
+        case "merah": textHasil = "20% s/d < 30% (Risiko Sangat Tinggi)"; break;
+        case "merah_tua": textHasil = "≥ 30% (Risiko Ekstrem)"; break;
+        default: textHasil = "< 5% (Risiko Rendah)";
+    }
+
+    // Tampilkan container utama hasil dan sesuaikan class warna box atas
+    var containerHasil = document.getElementById("output_container");
+    var divResultBox = document.getElementById("result");
+    
+    document.getElementById("result-value").innerHTML = textHasil;
+    divResultBox.className = "result-box " + (hasilWarna ? hasilWarna.trim() : "hijau");
+    
+    containerHasil.style.display = "block";
+    
+    // Scroll otomatis secara halus ke kotak hasil agar user langsung melihatnya
+    containerHasil.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>

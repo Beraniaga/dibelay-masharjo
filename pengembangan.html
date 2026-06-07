@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Halaman Dalam Pengembangan</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+    .glass-card {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fadeUp 0.8s ease-out forwards; }
+    .pulse-icon { animation: pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+  </style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/resizing_sdk.js" type="text/javascript"></script>
+ <script src="/_sdk/telemetry_sdk.js"></script></head>
+ <body data-template-id="__page-root" class="min-h-screen flex items-center justify-center p-6" style="background: linear-gradient(135deg, rgb(15, 23, 42), rgb(30, 58, 95), rgb(79, 70, 229));">
+  <main class="glass-card rounded-3xl p-10 md:p-14 text-center max-w-lg w-full animate-fade-up">
+   <div class="flex justify-center mb-6">
+    <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center pulse-icon"><i data-lucide="hard-hat" class="w-8 h-8 text-white"></i>
+    </div>
+   </div>
+   <h1 data-template-id="main-message" class="canva-text font-bold mb-3" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 28px;">Halaman dalam pengembangan oleh dr.Ayu</h1>
+   <p data-template-id="subtitle-text" class="canva-text mb-8 opacity-80" style="color: rgb(226, 232, 240); font-weight: 400; font-style: normal; font-size: 16px;">Kami sedang mempersiapkan sesuatu yang luar biasa. Silakan kembali nanti.</p><a data-template-id="back-button" href="index.html" class="canva-button inline-block px-8 py-3 rounded-full font-medium no-underline transition-transform hover:scale-105" style="background: rgb(255, 255, 255); color: rgb(30, 41, 59); font-weight: 600; font-style: normal; font-size: 16px;">Kembali ke Halaman Awal</a>
+  </main>
+  <script src="/_sdk/editing_sdk.js"></script>
+  <script>lucide.createIcons();</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a07e532f799b64ca',t:'MTc4MDgyMTM0Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body></html>
