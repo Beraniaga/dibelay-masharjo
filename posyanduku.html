@@ -299,10 +299,11 @@
             }
         };
 
-        let modeUsiaAktif = 'bulan';
+        let grafikInstance = null;
+		let modeUsiaAktif = 'bulan';
         let globalStatusRingkas = "Normal";
         let teksLaporanTerpilih = "";
-        let grafikInstance = null;
+        
 
         document.addEventListener("DOMContentLoaded", function() {
             updateGenderUI();
@@ -374,16 +375,41 @@
             else { return (nilaiRiil - median) / (p1sd - median); }
         }
 
-        function styleBadge(elementId, scoreId, zScore, kategori, tipe) {
-            const el = document.getElementById(elementId); const sc = document.getElementById(scoreId);
-            el.innerText = kategori.toUpperCase();
-            if(sc) sc.innerText = `Z-Score: ${zScore.toFixed(2)}`;
-            el.className = "px-2.5 py-0.5 rounded-full text-[11px] font-bold text-center ";
-            if (tipe === 'sukses') el.className += "bg-emerald-100 text-emerald-700";
-            else if (tipe === 'peringatan') el.className += "bg-amber-100 text-amber-700";
-            else if (tipe === 'bahaya') el.className += "bg-rose-100 text-rose-700";
-            else el.className += "bg-slate-100 text-slate-600";
-        }
+
+function styleBadge(elementId, scoreId, zScore, kategori, tipe) {
+    const el = document.getElementById(elementId); 
+    const sc = document.getElementById(scoreId);
+    
+    if (!el) return; // Pengaman jika elemen tidak ditemukan
+    
+    el.innerText = kategori.toUpperCase();
+    if(sc) sc.innerText = `Z-Score: ${zScore.toFixed(2)}`;
+    
+    // 1. Bersihkan dulu warna latar belakang lama agar tidak tumpuk-tumpuk
+    el.classList.remove(
+        'bg-slate-100', 'text-slate-600', 'border-slate-200',
+        'bg-rose-100', 'text-rose-700', 'border-rose-300',
+        'bg-amber-100', 'text-amber-700', 'border-amber-300',
+        'bg-emerald-100', 'text-emerald-700', 'border-emerald-300'
+    );
+    
+    // 2. Tambahkan class dasar yang konstan agar layout tidak rusak
+    el.classList.add('px-2.5', 'py-0.5', 'rounded-full', 'text-[11px]', 'font-bold', 'text-center', 'border');
+
+    // 3. LOGIKA UTAMA: Tentukan warna berdasarkan angka Z-Score
+    if (tipe === 'netral') {
+        el.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-200');
+    } else if (zScore < -3 || zScore > 3) {
+        // Area Bahaya / Rujuk (Merah) -> Sesuai garis merah SD3
+        el.classList.add('bg-rose-100', 'text-rose-700', 'border-rose-300');
+    } else if ((zScore >= -3 && zScore <= -2) || (zScore >= 2 && zScore <= 3)) {
+        // Area Batas / Peringatan (Kuning) -> Sesuai garis orange/kuning SD2
+        el.classList.add('bg-amber-100', 'text-amber-700', 'border-amber-300');
+    } else {
+        // Area Ideal / Aman (Hijau) -> Sesuai area tengah grafik
+        el.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+    }
+}
 
         function hitungStatus() {
             const gender = document.querySelector('input[name="gender"]:checked').value;
@@ -437,7 +463,7 @@
                 else if (zLk > 2) { katLku = "Makrosefali"; tipeLku = "bahaya"; adaMasalahGizi = true; }
             } else { katLku = "Selesai Skrining"; tipeLku = "netral"; document.getElementById('scoreLku').innerText = "Z-Score: Tidak Dinilai"; }
             if (bulan <= 24) styleBadge('badgeLku', 'scoreLku', zLk, katLku, tipeLku);
-            else styleBadge('badgeLku', '', 0, katLku, tipeLku);
+            else styleBadge('badgeLku', '', 0, katLku, 'netral');
 
             // 5. LiLA
             let katLila = "Normal"; let tipeLila = "sukses";
@@ -459,7 +485,7 @@
             if (sangatBahaya) {
                 kotakSaran.className = "mt-4 p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-900";
                 saranJudul.innerText = "🚨 RUJUK SEGERA KE PUSKESMAS";
-                saranIsi.innerText = "Terindikasi gangguan pertumbuhan kritis. Koordinasikan rujukan dengan Bidan Desa.";
+                saranIsi.innerText = "Terindikasi gangguan pertumbuhan. Koordinasikan rujukan dengan Kader dan Nakes Desa.";
                 globalStatusRingkas = "Bahaya / Rujuk";
             } else if (adaMasalahGizi) {
                 kotakSaran.className = "mt-4 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900";
@@ -477,63 +503,95 @@
             perbaruiVisualGrafik();
         }
 
-        // LOGIKA BARU: ENGINE RENDERING GRAFIK KMS BERDASARKAN PARAMETER YANG DIPILIH
-        function perbaruiVisualGrafik() {
-            const ctx = document.getElementById('grafikZScoreKms').getContext('2d');
-            const kategori = document.getElementById('pilihKategoriGrafik').value;
-            const gender = document.querySelector('input[name="gender"]:checked').value;
-            const dbGender = DATA_WHO[gender][kategori];
+        // =========================================================================
+// PERBAIKAN TOTAL: ENGINE RENDERING GRAFIK KMS UTK USIA DINAMIS (0-60 BLN)
+// =========================================================================
+function perbaruiVisualGrafik() {
+    const canvas = document.getElementById('grafikZScoreKms');
+    if (!canvas) return; 
+    
+    const ctx = canvas.getContext('2d');
+    const kategori = document.getElementById('pilihKategoriGrafik').value;
+    const gender = document.querySelector('input[name="gender"]:checked').value;
+    
+    // Pastikan database LK/U aman jika kategori dipilih di luar muatan database
+    if (!DATA_WHO[gender][kategori]) return;
+    const dbGender = DATA_WHO[gender][kategori];
 
-            const curBulan = parseFloat(document.getElementById('usiaBulan').value) || parseFloat(document.getElementById('usiaBulan').placeholder);
-            let curNilaiUkur = 0;
+    const curBulan = parseFloat(document.getElementById('usiaBulan').value) || parseFloat(document.getElementById('usiaBulan').placeholder);
+    let curNilaiUkur = 0;
 
-            if (kategori === "BBU") curNilaiUkur = parseFloat(document.getElementById('beratBadan').value) || parseFloat(document.getElementById('beratBadan').placeholder);
-            else if (kategori === "TBU") curNilaiUkur = parseFloat(document.getElementById('tinggiBadan').value) || parseFloat(document.getElementById('tinggiBadan').placeholder);
-            else if (kategori === "LKU") curNilaiUkur = parseFloat(document.getElementById('lingkarKepala').value) || parseFloat(document.getElementById('lingkarKepala').placeholder);
+    if (kategori === "BBU") curNilaiUkur = parseFloat(document.getElementById('beratBadan').value) || parseFloat(document.getElementById('beratBadan').placeholder);
+    else if (kategori === "TBU") curNilaiUkur = parseFloat(document.getElementById('tinggiBadan').value) || parseFloat(document.getElementById('tinggiBadan').placeholder);
+    else if (kategori === "LKU") curNilaiUkur = parseFloat(document.getElementById('lingkarKepala').value) || parseFloat(document.getElementById('lingkarKepala').placeholder);
 
-            // Membuat array label x-axis (Bulan 0, 6, 12, 18, 24, 36, 48, 60)
-            const labelsX = dbGender.map(item => item[0] + " Bln");
-            
-            // Ekstrak garis ambang batas WHO (SD-3 s.d SD+3)
-            const dataSD3Neg = dbGender.map(item => item[1]);
-            const dataSD2Neg = dbGender.map(item => item[2]);
-            const dataSD1Neg = dbGender.map(item => item[3]);
-            const dataMedian = dbGender.map(item => item[4]);
-            const dataSD1Pos = dbGender.map(item => item[5]);
-            const dataSD2Pos = dbGender.map(item => item[6]);
-            const dataSD3Pos = dbGender.map(item => item[7]);
+    // 1. Ambil data sumbu X murni berupa angka untuk kalkulasi Chart.js (0, 6, 12, dst)
+    const labelSumbuXAngka = dbGender.map(item => item[0]);
+    
+    // 2. Ekstrak jalur garis kurva standar WHO ke dalam format koordinat {x, y}
+    const buatKurvaSederhana = (indeksKolom) => dbGender.map(item => ({ x: item[0], y: item[indeksKolom] }));
 
-            // Mapping posisi titik ukur anak saat ini ke dalam grafik
-            const dataAnak = dbGender.map(item => {
-                if (Math.abs(item[0] - curBulan) < 3 || (curBulan > 24 && Math.abs(item[0] - curBulan) <= 6)) {
-                    return curNilaiUkur;
-                }
-                return null;
-            });
+    const dataSD3Neg = buatKurvaSederhana(1);
+    const dataSD2Neg = buatKurvaSederhana(2);
+    const dataSD1Neg = buatKurvaSederhana(3);
+    const dataMedian = buatKurvaSederhana(4);
+    const dataSD1Pos = buatKurvaSederhana(5);
+    const dataSD2Pos = buatKurvaSederhana(6);
+    const dataSD3Pos = buatKurvaSederhana(7);
 
-            if (grafikInstance) { grafikInstance.destroy(); }
+    // 3. LOGIKA JELI: Titik anak dipasang sebagai objek Scatter mandiri {x: usia_riil, y: nilai_riil}
+    // Dengan cara ini, Chart.js akan memposisikan titik secara linier-matematis di antara grid sumbu X.
+    const dataTitikAnakPresisi = [{ x: curBulan, y: curNilaiUkur }];
 
-            grafikInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labelsX,
-                    datasets: [
-                        { label: 'Posisi Anak', data: dataAnak, borderColor: '#0284c7', borderWidth: 5, pointRadius: 7, pointBackgroundColor: '#0284c7', fill: false, spanGaps: true, z: 99 },
-                        { label: 'SD +3', data: dataSD3Pos, borderColor: '#dc2626', borderDash: [3,3], fill: false, pointRadius: 0 },
-                        { label: 'SD +2', data: dataSD2Pos, borderColor: '#ef4444', fill: false, pointRadius: 0 },
-                        { label: 'SD 0 (Ideal)', data: dataMedian, borderColor: '#22c55e', borderWidth: 2, fill: false, pointRadius: 0 },
-                        { label: 'SD -2', data: dataSD2Neg, borderColor: '#f59e0b', fill: false, pointRadius: 0 },
-                        { label: 'SD -3', data: dataSD3Neg, borderColor: '#dc2626', borderDash: [3,3], fill: false, pointRadius: 0 }
-                    ]
+    if (grafikInstance) { grafikInstance.destroy(); }
+
+    grafikInstance = new Chart(ctx, {
+        type: 'line', // Jenis dasar grafik adalah garis
+        data: {
+            datasets: [
+                {
+                    label: 'Posisi Anak Riil',
+                    data: dataTitikAnakPresisi,
+                    type: 'scatter', // Di-override menjadi scatter khusus titik ini saja
+                    backgroundColor: '#0284c7',
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                    pointRadius: 8,
+                    pointHoverRadius: 10,
+                    z: 999 // Memastikan titik berada di lapisan paling atas kurva
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: false } },
-                    plugins: { legend: { display: false } }
+                { label: 'SD +3', data: dataSD3Pos, borderColor: '#dc2626', borderDash: [3,3], fill: false, pointRadius: 0, borderWidth: 1.5 },
+                { label: 'SD +2', data: dataSD2Pos, borderColor: '#ef4444', fill: false, pointRadius: 0, borderWidth: 1.5 },
+                { label: 'SD 0 (Ideal)', data: dataMedian, borderColor: '#22c55e', borderWidth: 2.5, fill: false, pointRadius: 0 },
+                { label: 'SD -2', data: dataSD2Neg, borderColor: '#f59e0b', fill: false, pointRadius: 0, borderWidth: 1.5 },
+                { label: 'SD -3', data: dataSD3Neg, borderColor: '#dc2626', borderDash: [3,3], fill: false, pointRadius: 0, borderWidth: 1.5 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { 
+                x: {
+                    type: 'linear', // WAJIB LINEAR: Supaya jarak koordinat antar angka dihitung presisi
+                    min: 0,
+                    max: 60,
+                    ticks: {
+                        stepSize: 6, // Memunculkan grid kelipatan 6 bulan (0, 6, 12, 18, dst)
+                        callback: function(value) { return value + " Bln"; },
+                        font: { size: 10 }
+                    }
+                },
+                y: { 
+                    beginAtZero: false,
+                    ticks: { font: { size: 10 } }
                 }
-            });
+            },
+            plugins: { 
+                legend: { display: false } // Sembunyikan legenda bawaan agar bersih
+            }
         }
+    });
+}
 
         // FUNGSI LOCAL STORAGE (TETAP DIJAGA UTUH DARI CODINGANMU)
         function simpanKeTabel() {
