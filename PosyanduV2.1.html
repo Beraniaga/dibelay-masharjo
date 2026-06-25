@@ -43,39 +43,25 @@
                 <span class="text-3xl">🔐</span>
                 <h2 class="text-sm font-black text-slate-700 uppercase mt-2 tracking-wider">Akses Aplikasi Posyandu</h2>
                 <p class="text-[10px] text-slate-400">Masukkan password wilayah Kelurahan / RW untuk masuk ke sistem.</p>
-            </div>
-						<!-- Form Input Password -->
-			<div class="mb-4">
-				<label class="block text-[10px] font-bold text-slate-500 mb-1">Password</label>
-				<!-- 🔴 Pembungkus relative harus pas di sini -->
-				<div class="relative w-full">
-				<input 
-				type="password" 
-				id="input_password" 
-				class="w-full text-xs p-3 pr-10 border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
-				placeholder="Masukkan password...">
-        
-				<!-- Tombol Mata -->
-				<button 
-				type="button" 
-				onclick="togglePasswordGue()" 
-				class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
-				<svg id="iconMata" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-				</svg>
-				</button>
-				</div> <!-- 🔴 Penutup pembungkus relative -->
+            <div class="relative w-full">
+		<input 
+        type="password" 
+        id="inputPasswordLogin" 
+        class="w-full text-xs p-3 pr-10 border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
+        placeholder="Masukkan password...">
+    
+		<button 
+        type="button" 
+        onclick="togglePasswordGue()" 
+        class="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-slate-400 hover:text-slate-600 focus:outline-none">
+        👁️
+		</button>
 			</div>
-
-			<!-- 🔴 Tombol Masuk (Sekarang dijamin muncul dan aman di bawahnya) -->
-			<button 
-			type="button"
-			onclick="fungsiLoginLuDiSini()" 
-			class="w-full bg-emerald-600 text-white text-xs font-bold p-3 rounded-xl hover:bg-emerald-700 transition-all shadow-sm">
-			Masuk Aplikasi
-			</button>
-
+			</div>
+                <button onclick="prosesLoginWilayah()" class="w-full bg-slate-800 text-white rounded-xl py-2.5 text-xs font-bold hover:bg-slate-900 transition-all shadow-sm">
+                    Masuk Layanan
+                </button>
+            
         </div>
 
         <div id="panelPilihMeja" class="hidden bg-white rounded-2xl shadow-sm p-6 border border-slate-200/60 text-center">
@@ -1438,16 +1424,12 @@ function bersihkanDataSelesai() {
 }
 
 function togglePasswordGue() {
-    const passInput = document.getElementById('input_password');
-    const iconMata = document.getElementById('iconMata');
+    const passInput = document.getElementById('inputPasswordLogin');
     
     if (passInput.type === "password") {
         passInput.type = "text";
-        // Ubah warna ikon jadi emerald pas password kelihatan (opsional)
-        iconMata.classList.add('text-emerald-500');
     } else {
         passInput.type = "password";
-        iconMata.classList.remove('text-emerald-500');
     }
 }
     </script>
