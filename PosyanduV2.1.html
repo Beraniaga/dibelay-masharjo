@@ -1426,6 +1426,20 @@ function bersihkanDataSelesai() {
             alert("Gagal membersihkan data: " + error.message);
         });
 }
+
+function togglePasswordGue() {
+    const passInput = document.getElementById('input_password');
+    const iconMata = document.getElementById('iconMata');
+    
+    if (passInput.type === "password") {
+        passInput.type = "text";
+        // Ubah warna ikon jadi emerald pas password kelihatan (opsional)
+        iconMata.classList.add('text-emerald-500');
+    } else {
+        passInput.type = "password";
+        iconMata.classList.remove('text-emerald-500');
+    }
+}
     </script>
 </body>
 </html>
