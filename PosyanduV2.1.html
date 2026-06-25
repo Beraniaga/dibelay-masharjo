@@ -44,12 +44,28 @@
                 <h2 class="text-sm font-black text-slate-700 uppercase mt-2 tracking-wider">Akses Aplikasi Posyandu</h2>
                 <p class="text-[10px] text-slate-400">Masukkan password wilayah Kelurahan / RW untuk masuk ke sistem.</p>
             </div>
-            <div class="space-y-3">
-                <input type="password" id="inputPasswordLogin" class="w-full rounded-xl border border-slate-200 p-2.5 text-center text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold tracking-widest" placeholder="••••••••">
-                <button onclick="prosesLoginWilayah()" class="w-full bg-slate-800 text-white rounded-xl py-2.5 text-xs font-bold hover:bg-slate-900 transition-all shadow-sm">
-                    Masuk Layanan
-                </button>
-            </div>
+            <div class="relative w-full">
+				<!-- Input Password -->
+				<input 
+					type="password" 
+					id="input_password" 
+					class="w-full text-xs p-3 pr-10 border rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
+					placeholder="Masukkan password...">
+    
+				<!-- Tombol Mata (Gunakan position absolute agar posisinya terkunci di kanan dalam) -->
+				<button 
+					type="button" 
+					onclick="togglePasswordGue()" 
+					class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+        
+					<!-- Icon Mata (Gunakan SVG bawaan atau Lucide/Heroicons biar ringan di HP) -->
+					<svg id="iconMata" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+					<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+					</svg>
+				</button>
+
+			</div>
         </div>
 
         <div id="panelPilihMeja" class="hidden bg-white rounded-2xl shadow-sm p-6 border border-slate-200/60 text-center">
@@ -712,6 +728,17 @@ function gantiKurvaMeja4Manual() {
                 document.getElementById('m2_targetNama').innerText = anak.metadata.nama_anak;
                 document.getElementById('m2_targetUsia').innerText = `${usia} Bulan`;
                 setTimeout(() => { triggerInisialisasiGrafikKms(gender, usia); }, 100);
+				// Ambil data meja 2 yang sudah tersimpan di database lokal sistem lu
+				const dataM2Lama = anak.data_meja_2 || {};
+
+				// Tampilkan angka sebelumnya ke kotak input jika sudah pernah diisi, jika belum biarkan kosong
+				document.getElementById('m2_bb').value = dataM2Lama.berat_badan || "";
+				document.getElementById('m2_tb').value = dataM2Lama.tinggi_badan || "";
+				document.getElementById('m2_lk').value = dataM2Lama.lingkar_kepala || "";
+				document.getElementById('m2_lila').value = dataM2Lama.lila || "";
+    
+				// Kode buat nampilin form Meja 2 selanjutnya...
+				document.getElementById('formUkurM2').classList.remove('hidden');
             } 
 			else if (peranMejaAktif === 3) {
                 document.getElementById('formSkriningM3').classList.remove('hidden');
@@ -766,33 +793,75 @@ function gantiKurvaMeja4Manual() {
 }
         }
 
-        function kirimPengukuranMeja2() {
-            const bb = parseFloat(document.getElementById('m2_bb').value) || 0;
-            const tb = parseFloat(document.getElementById('m2_tb').value) || 0;
-            const lk = parseFloat(document.getElementById('m2_lk').value) || 0;
-            const lila = parseFloat(document.getElementById('m2_lila').value) || 0;
+function kirimPengukuranMeja2() {
+    // 1. Ambil nilai mentah dari input (biarkan kosong dulu, jangan langsung di-default ke 0)
+    const bbInput = document.getElementById('m2_bb').value;
+    const tbInput = document.getElementById('m2_tb').value;
+    const lkInput = document.getElementById('m2_lk').value;
+    const lilaInput = document.getElementById('m2_lila').value;
 
-            if(!bb || !tb) { alert("Harap isi Berat dan Tinggi Badan balita!"); return; }
+    // 2. Validasi awal: Minimal harus ada SATU data yang diisi petugas
+    if (!bbInput && !tbInput && !lkInput && !lilaInput) {
+        alert("Harap isi minimal salah satu hasil pengukuran sebelum menyimpan!");
+        return;
+    }
 
-            const updateDataM2 = {
-                berat_badan: bb,
-                tinggi_badan: tb,
-                lingkar_kepala: lk,
-                lila: lila,
-                waktu_input: new Date().toLocaleString('id-ID')
-            };
+    // 3. Bangun objek data_meja_2 secara dinamis (hanya masukkan yang diisi saja)
+    const updateDataM2 = {};
+    if (bbInput !== "") updateDataM2.berat_badan = parseFloat(bbInput);
+    if (tbInput !== "") updateDataM2.tinggi_badan = parseFloat(tbInput);
+    if (lkInput !== "") updateDataM2.lingkar_kepala = parseFloat(lkInput);
+    if (lilaInput !== "") updateDataM2.lila = parseFloat(lilaInput);
+    
+    updateDataM2.waktu_input = new Date().toLocaleString('id-ID');
 
-            dbFirebase.ref(`antrean_posyandu/${idAnakTerpilihDiMeja}`).update({
-                data_meja_2: updateDataM2,
-                status_meja: 3
-            }).then(() => {
-                alert("Data pengukuran tersimpan! Balita bergeser ke Antrean Meja 3.");
-                document.getElementById('formUkurM2').classList.add('hidden');
-                document.getElementById('formMeja1').parentElement.classList.add('hidden'); // Amankan reset display
-                idAnakTerpilihDiMeja = null;
-            });
+    // 4. Cek apakah pengukuran sudah LENGKAP (BB dan TB wajib ada) untuk syarat lolos ke Meja 3
+    // Kita cek data baru atau data yang sebelumnya sudah tersimpan di sistem lokal lu
+    const anakSelesai = dataSeluruhAntreanLocal[idAnakTerpilihDiMeja] || {};
+    const dataLamaM2 = anakSelesai.data_meja_2 || {};
+    
+    const punyaBB = updateDataM2.berat_badan || dataLamaM2.berat_badan;
+    const punyaTB = updateDataM2.tinggi_badan || dataLamaM2.tinggi_badan;
+	const punyaLK = updateDataM2.lingkar_kepala || dataLamaM2.lingkar_kepala;
+	const punyaLila = updateDataM2.lila || dataLamaM2.lila;
+
+    // Tentukan status meja: kalau BB dan TB sudah lengkap, baru naik ke Meja 3. Kalau belum, tetap di Meja 2.
+    const targetMeja = (punyaBB && punyaTB && punyaLK && punyaLila) ? 3 : 2;
+
+    // 5. Kirim perubahan ke Firebase dengan path spesifik agar tidak menimpa satu sama lain
+    const dataKeFirebase = {};
+    
+    // Gunakan loop untuk memasukkan sub-child data_meja_2 secara presisi satu per satu
+    for (let key in updateDataM2) {
+        dataKeFirebase[`data_meja_2/${key}`] = updateDataM2[key];
+    }
+    dataKeFirebase[`status_meja`] = targetMeja;
+
+    dbFirebase.ref(`antrean_posyandu/${idAnakTerpilihDiMeja}`).update(dataKeFirebase)
+	.then(() => {
+        // 🔴 FUNGSI RESET INPUT: Bersihkan semua kotak input Meja 2 biar gak jebol ke anak selanjutnya
+        document.getElementById('m2_bb').value = "";
+        document.getElementById('m2_tb').value = "";
+        document.getElementById('m2_lk').value = "";
+        document.getElementById('m2_lila').value = "";
+
+        if (targetMeja === 3) {
+            alert("Data pengukuran lengkap! Balita otomatis bergeser ke Antrean Meja 3.");
+            document.getElementById('formUkurM2').classList.add('hidden');
+            document.getElementById('formMeja1').parentElement.classList.add('hidden');
+            idAnakTerpilledDiMeja = null;
+        } else {
+            alert("Data dicatat! Antrean tetap di Meja 2 sampai data antropometri diisi lengkap.");
+            
+            document.getElementById('formUkurM2').classList.add('hidden'); 
+            if(document.getElementById('formMeja1')) {
+                document.getElementById('formMeja1').parentElement.classList.add('hidden');
+            }
+            
+            idAnakTerpilihDiMeja = null; 
         }
-
+    });
+}
         // 7. MESIN KPSP & IMUNISASI ENGINE GENERATOR
         const BANK_KPSP = {
             3: ["Apakah bayi dapat mengangkat kepalanya setinggi 45 derajat saat telungkup?", "Apakah bayi dapat tertawa keras secara spontan jika diajak bercanda?", "Apakah bayi dapat membalas senyuman Anda ketika Anda mengajaknya tersenyum?", "Apakah bayi dapat mengikuti gerakan benda dengan pandangan matanya?", "Apakah bayi suka mengoceh mengeluarkan suara 'oo', 'aa' secara spontan?"],
