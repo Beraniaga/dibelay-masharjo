@@ -465,25 +465,39 @@ function gantiKurvaMeja4Manual() {
         }
 
         // 3. LOGIKA AKSES MASUK PINTU LOGIN
-        function prosesLoginWilayah() {
-            const inputPass = document.getElementById('inputPasswordLogin').value.trim();
-            const dataAkun = DAFTAR_AKUN_POSYANDU[inputPass];
+function prosesLoginWilayah() {
+    const inputPass = document.getElementById('inputPasswordLogin').value.trim();
+    const dataAkun = DAFTAR_AKUN_POSYANDU[inputPass];
 
-            if (dataAkun) {
-                akunWilayahAktif = dataAkun;
-                alert(`🔓 Login Berhasil! Selamat Datang Kader ${dataAkun.label}`);
-                
-                document.getElementById('screenLoginWilayah').classList.add('hidden');
-                document.getElementById('panelPilihMeja').classList.remove('hidden');
-                document.getElementById('screenMenuUtama').classList.remove('hidden');
-                
-                // Nyalakan listener database sesaat setelah login sukses
-                aktifkanFirebaseListenerPusat();
-            } else {
-                alert("❌ Password salah atau wilayah tidak terdaftar!");
-                document.getElementById('inputPasswordLogin').value = "";
-            }
-        }
+    if (dataAkun) {
+        // 1. Minta "surat izin" aman (Auth Anonim) ke Firebase di latar belakang
+        firebase.auth().signInAnonymously()
+        .then(() => {
+            console.log("🔒 Akses Firebase Berhasil Diamankan!");
+
+            // 2. Jika Firebase sukses mengizinkan, jalankan kode asli lu di bawah ini
+            akunWilayahAktif = dataAkun;
+            alert(`🔓 Login Berhasil! Selamat Datang Kader ${dataAkun.label}`);
+            
+            document.getElementById('screenLoginWilayah').classList.add('hidden');
+            document.getElementById('panelPilihMeja').classList.remove('hidden');
+            document.getElementById('screenMenuUtama').classList.remove('hidden');
+            
+            // Nyalakan listener database sesaat setelah login sukses
+            aktifkanFirebaseListenerPusat();
+        })
+        .catch((error) => {
+            // Jaga-jaga jika internet putus atau Firebase belum di-enable anonimnya
+            alert("❌ Gagal mengamankan koneksi Firebase: " + error.message);
+            console.error("Auth Error:", error);
+        });
+
+    } else {
+        alert("❌ Password salah atau wilayah tidak terdaftar!");
+        document.getElementById('inputPasswordLogin').value = "";
+    }
+}
+
 
         // 4. KONTROL SAKLAR NAVIGASI ANTAR SCREEN MEJA
         function setPeranMejaAktif(nomorMeja) {
