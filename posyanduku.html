@@ -481,21 +481,28 @@ function styleBadge(elementId, scoreId, zScore, kategori, tipe) {
             else { textMpasi.innerText = "Makanan Keluarga Gizi Seimbang. Berikan lauk pauk tinggi zat besi & protein untuk optimalisasi tumbuh kembang."; }
 
             // Kotak Kesimpulan & Rekomendasi
-            const kotakSaran = document.getElementById('kotakSaran'); const saranJudul = document.getElementById('saranJudul'); const saranIsi = document.getElementById('saranIsi');
-            if (sangatBahaya) {
+			const kotakSaran = document.getElementById('kotakSaran'); 
+            const saranJudul = document.getElementById('saranJudul'); 
+            const saranIsi = document.getElementById('saranIsi');
+
+            // Cek apakah ada parameter yang berstatus bahaya (merah) atau peringatan (kuning)
+            const statusMerah = (tipeBbu === "bahaya" || tipeTbu === "bahaya" || tipeBbtb === "bahaya" || tipeLku === "bahaya" || tipeLila === "bahaya");
+            const statusKuning = (tipeBbu === "peringatan" || tipeTbu === "peringatan" || tipeBbtb === "peringatan" || tipeLku === "peringatan" || tipeLila === "peringatan");
+
+            if (sangatBahaya || statusMerah) {
                 kotakSaran.className = "mt-4 p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-900";
                 saranJudul.innerText = "🚨 RUJUK SEGERA KE PUSKESMAS";
-                saranIsi.innerText = "Terindikasi gangguan pertumbuhan. Koordinasikan rujukan dengan Kader dan Nakes Desa.";
+                saranIsi.innerText = "Terindikasi gangguan atau penyimpangan pertumbuhan kritis/akut pada salah satu parameter Z-Score atau LiLA. Mohon kader segera mencatat dan berkoordinasi dengan Bidan Desa untuk tindakan rujukan klinis.";
                 globalStatusRingkas = "Bahaya / Rujuk";
-            } else if (adaMasalahGizi) {
+            } else if (adaMasalahGizi || statusKuning) {
                 kotakSaran.className = "mt-4 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900";
-                saranJudul.innerText = "⚠️ PERHATIAN: EDUKASI NUTRISI";
-                saranIsi.innerText = "Anak terindikasi kurang gizi/stunting. Berikan PMT protein tinggi & jadwalkan evaluasi bulan depan.";
+                saranJudul.innerText = "⚠️ PERHATIAN: EDUKASI NUTRISI & PANTUAN";
+                saranIsi.innerText = "Anak terindikasi masuk dalam zona kuning (BB Kurang, Risiko Lebih, atau Pendek/Stunting) pada kurva pertumbuhan WHO. Berikan edukasi pemberian PMT kaya protein hewani dan jadwalkan evaluasi ketat bulan depan.";
                 globalStatusRingkas = "Butuh Pantauan";
             } else {
                 kotakSaran.className = "mt-4 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900";
                 saranJudul.innerText = "✅ PERTAHANKAN: ANAK TUMBUH SEHAT";
-                saranIsi.innerText = "Pertumbuhan fisik berada di jalur hijau (Normal). Pertahankan pola asuh sehat ini.";
+                saranIsi.innerText = "Seluruh parameter pertumbuhan fisik anak terpantau optimal dan berada di jalur hijau (Normal). Berikan apresiasi kepada orang tua untuk mempertahankan pola asuh sehat saat ini.";
                 globalStatusRingkas = "Normal";
             }
 
