@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Database Kepegawaian</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <!-- HEADER BAR -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 text-white p-2 rounded-xl">
+                    <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 tracking-tight">Database Kepegawaian</h1>
+                    <p class="text-[11px] text-slate-500">Puskesmas Umbulharjo 1</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-700">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                database Connected
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- COUNTER STATS -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="user-check" class="w-5 h-5"></i></div>
+                <div>
+                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Total Pegawai</p>
+                    <h3 id="stat-total" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-xl"><i data-lucide="award" class="w-5 h-5"></i></div>
+                <div>
+                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Pegawai ASN</p>
+                    <h3 id="stat-asn" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="briefcase" class="w-5 h-5"></i></div>
+                <div>
+                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">JLOP / TT</p>
+                    <h3 id="stat-tt" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+                <div class="p-3 bg-rose-50 text-rose-600 rounded-xl"><i data-lucide="shield-alert" class="w-5 h-5"></i></div>
+                <div>
+                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Pihak Ketiga</p>
+                    <h3 id="stat-p3" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEARCH & FILTER CONTROLS -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+            <div class="relative w-full md:w-96">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
+                <input type="text" id="search-input" placeholder="Cari nama, NIP, atau jabatan..." 
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-blue-500 focus:bg-white transition-all">
+            </div>
+            <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+                <button onclick="filterStatus('ALL')" class="filter-btn active bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">Semua</button>
+                <button onclick="filterStatus('ASN')" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">ASN</button>
+                <button onclick="filterStatus('JLOP / TT')" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">JLOP / TT</button>
+                <button onclick="filterStatus('Pihak Ketiga')" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">Pihak Ketiga</button>
+            </div>
+        </div>
+
+        <!-- EMPLOYEE GRID GRID -->
+        <div id="loading-state" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-2"></div>
+            <p class="text-xs text-slate-500 font-medium">Sinkronisasi database spreadsheet...</p>
+        </div>
+
+        <div id="employee-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
+    </main>
+
+    <!-- FLOATING POPUP DETAIL MODAL -->
+    <div id="detail-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden transform scale-95 transition-all duration-200">
+            <div class="bg-linear-to-r from-blue-600 to-indigo-700 p-6 text-white relative">
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-white/80 hover:text-white bg-white/10 p-1.5 rounded-full hover:bg-white/20 transition-all cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+                <span id="modal-badge" class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-md bg-white/20 tracking-wider">ASN</span>
+                <h3 id="modal-nama" class="text-lg font-bold mt-2">Nama Pegawai</h3>
+                <p id="modal-jabatan" class="text-xs text-blue-100 mt-0.5">Jabatan Pegawai</p>
+            </div>
+            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto" id="modal-body-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // PASTE URL GOOGLE APPS SCRIPT KANAN DI SINI
+        const API_URL = "https://script.google.com/macros/s/AKfycbwqiivs1Re3C2dEdnK95Gy0Ast_ATdjdfTpXnYNyosBLZs5W6wl1EEgRna1AvJLqs2c/exec";
+        
+        let allEmployees = [];
+        let currentFilter = 'ALL';
+
+        async function fetchEmployeeData() {
+            try {
+                const response = await fetch(API_URL);
+                allEmployees = await response.json();
+                
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('employee-grid').classList.remove('hidden');
+                
+                updateDashboardStats();
+                renderEmployees();
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading-state').innerHTML = `<p class="text-rose-500 font-medium text-xs">Gagal sinkronisasi data. Periksa pengaturan deployment URL Web App Script Anda.</p>`;
+            }
+        }
+
+        function updateDashboardStats() {
+            document.getElementById('stat-total').innerText = allEmployees.length;
+            document.getElementById('stat-asn').innerText = allEmployees.filter(p => p.STATUS === 'ASN').length;
+            document.getElementById('stat-tt').innerText = allEmployees.filter(p => p.STATUS === 'JLOP / TT').length;
+            document.getElementById('stat-p3').innerText = allEmployees.filter(p => p.STATUS === 'Pihak Ketiga').length;
+        }
+
+        function renderEmployees() {
+            const grid = document.getElementById('employee-grid');
+            const searchKeyword = document.getElementById('search-input').value.toLowerCase();
+            grid.innerHTML = '';
+
+            const filtered = allEmployees.filter(p => {
+                const matchStatus = currentFilter === 'ALL' || p.STATUS === currentFilter;
+                const matchSearch = (p.NAMA && p.NAMA.toLowerCase().includes(searchKeyword)) || 
+                                    (p.JABATAN && p.JABATAN.toLowerCase().includes(searchKeyword)) ||
+                                    (p.NIP_NIPPPK && p.NIP_NIPPPK.toString().includes(searchKeyword));
+                return matchStatus && matchSearch;
+            });
+
+            if(filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-slate-400 text-xs py-12">Data pegawai tidak ditemukan.</div>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                let badgeColor = 'bg-purple-100 text-purple-700';
+                if(p.STATUS === 'JLOP / TT') badgeColor = 'bg-amber-100 text-amber-700';
+                if(p.STATUS === 'Pihak Ketiga') badgeColor = 'bg-rose-100 text-rose-700';
+
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md hover:border-blue-400 transition-all duration-200 cursor-pointer flex flex-col justify-between';
+                card.onclick = () => openModal(p);
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start gap-2 mb-3">
+                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold ${badgeColor}">${p.STATUS}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">NO: ${p.NO || '—'}</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm line-clamp-1">${p.NAMA}</h4>
+                        <p class="text-xs text-slate-500 mt-1 line-clamp-1"><i data-lucide="briefcase" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i>${p.JABATAN || '—'}</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+                        <span>${p.NIP_NIPPPK && p.NIP_NIPPPK !== '—' ? 'NIP: ' + p.NIP_NIPPPK.substring(0,8)+'...' : 'Non-NIP'}</span>
+                        <span class="text-blue-600 font-semibold flex items-center gap-1 hover:underline text-[11px]">Detail <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function openModal(pegawai) {
+            const modal = document.getElementById('detail-modal');
+            document.getElementById('modal-nama').innerText = pegawai.NAMA;
+            document.getElementById('modal-jabatan').innerText = pegawai.JABATAN || '—';
+            document.getElementById('modal-badge').innerText = pegawai.STATUS;
+            
+            const bodyContent = document.getElementById('modal-body-content');
+            
+            let detailsHtml = `
+                <div class="grid grid-cols-2 gap-4 border-b border-slate-100 pb-3">
+                    <div class="flex items-start gap-2.5">
+                        <div class="text-slate-400 mt-0.5"><i data-lucide="credit-card" class="w-4 h-4"></i></div>
+                        <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">NIK KTP</p><p class="text-xs font-semibold text-slate-800">${pegawai.NIK}</p></div>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <div class="text-slate-400 mt-0.5"><i data-lucide="hash" class="w-4 h-4"></i></div>
+                        <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">NPWP</p><p class="text-xs font-semibold text-slate-800">${pegawai.NPWP}</p></div>
+                    </div>
+                </div>
+                <div class="flex items-start gap-2.5 border-b border-slate-100 pb-3">
+                    <div class="text-slate-400 mt-0.5"><i data-lucide="calendar" class="w-4 h-4"></i></div>
+                    <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">TMT Jabatan</p><p class="text-xs font-semibold text-slate-800">${pegawai.TMT_JABATAN}</p></div>
+                </div>
+            `;
+
+            if(pegawai.STATUS === 'ASN') {
+                detailsHtml += `
+                    <div class="flex items-start gap-2.5 border-b border-slate-100 pb-3">
+                        <div class="text-slate-400 mt-0.5"><i data-lucide="binary" class="w-4 h-4"></i></div>
+                        <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">NIP / NIPPPK</p><p class="text-xs font-semibold text-slate-800">${pegawai.NIP_NIPPPK}</p></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 border-b border-slate-100 pb-3">
+                        <div class="flex items-start gap-2.5">
+                            <div class="text-slate-400 mt-0.5"><i data-lucide="award" class="w-4 h-4"></i></div>
+                            <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Pangkat & Jenjang</p><p class="text-xs font-semibold text-slate-800">${pegawai.PANGKAT || '—'}</p><p class="text-[11px] text-slate-400 mt-0.5">${pegawai.JENJANG || ''}</p></div>
+                        </div>
+                        <div class="flex items-start gap-2.5">
+                            <div class="text-slate-400 mt-0.5"><i data-lucide="layers" class="w-4 h-4"></i></div>
+                            <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Golongan Ruang</p><p class="text-xs font-semibold text-slate-800">${pegawai.GOL_RUANG || '—'}</p></div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2.5 border-b border-slate-100 pb-3">
+                        <div class="text-slate-400 mt-0.5"><i data-lucide="calendar-check" class="w-4 h-4"></i></div>
+                        <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">TMT Pangkat/Golongan</p><p class="text-xs font-semibold text-slate-800">${pegawai.TMT_PANGKAT}</p></div>
+                    </div>
+                `;
+            }
+
+            bodyContent.innerHTML = detailsHtml;
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        function filterStatus(status) {
+            currentFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'active');
+                btn.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            event.target.classList.remove('bg-slate-100', 'text-slate-600');
+            event.target.classList.add('bg-blue-600', 'text-white', 'active');
+            renderEmployees();
+        }
+
+        document.getElementById('search-input').addEventListener('input', renderEmployees);
+        window.onload = fetchEmployeeData;
+    </script>
+</body>
+</html>
