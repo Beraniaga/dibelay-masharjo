@@ -4,82 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Database Kepegawaian</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
 
-    <!-- HEADER BAR -->
+    <!-- HEADER -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="bg-blue-600 text-white p-2 rounded-xl">
-                    <i data-lucide="users" class="w-6 h-6"></i>
-                </div>
+                <div class="bg-blue-600 text-white p-2 rounded-xl"><i data-lucide="users" class="w-6 h-6"></i></div>
                 <div>
-                    <h1 class="text-lg font-bold text-slate-900 tracking-tight">Kepegawaian</h1>
-                    <p class="text-[11px] text-slate-500">Puskesmas Umbulharjo 1</p>
+                    <h1 class="text-lg font-bold text-slate-900 tracking-tight">Database Kepegawaian</h1>
+                    <p class="text-[11px] text-slate-500">Data Terintegrasi MasterData Spreadsheet</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-700">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                database Connected
+                Spreadsheet Connected
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
         <!-- COUNTER STATS -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
                 <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="user-check" class="w-5 h-5"></i></div>
-                <div>
-                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Total Pegawai</p>
-                    <h3 id="stat-total" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
-                </div>
+                <div><p class="text-[11px] text-slate-400 font-medium uppercase">Total Pegawai</p><h3 id="stat-total" class="text-xl font-bold text-slate-900 mt-0.5">0</h3></div>
             </div>
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
                 <div class="p-3 bg-purple-50 text-purple-600 rounded-xl"><i data-lucide="award" class="w-5 h-5"></i></div>
-                <div>
-                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Pegawai ASN</p>
-                    <h3 id="stat-asn" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
-                </div>
+                <div><p class="text-[11px] text-slate-400 font-medium uppercase">Pegawai ASN</p><h3 id="stat-asn" class="text-xl font-bold text-slate-900 mt-0.5">0</h3></div>
             </div>
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
                 <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="briefcase" class="w-5 h-5"></i></div>
-                <div>
-                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">JLOP / TT</p>
-                    <h3 id="stat-tt" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
-                </div>
+                <div><p class="text-[11px] text-slate-400 font-medium uppercase">JLOP / TT</p><h3 id="stat-tt" class="text-xl font-bold text-slate-900 mt-0.5">0</h3></div>
             </div>
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
                 <div class="p-3 bg-rose-50 text-rose-600 rounded-xl"><i data-lucide="shield-alert" class="w-5 h-5"></i></div>
-                <div>
-                    <p class="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Pihak Ketiga</p>
-                    <h3 id="stat-p3" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
-                </div>
+                <div><p class="text-[11px] text-slate-400 font-medium uppercase">Pihak Ketiga</p><h3 id="stat-p3" class="text-xl font-bold text-slate-900 mt-0.5">0</h3></div>
             </div>
         </div>
 
-        <!-- SEARCH & FILTER CONTROLS -->
+        <!-- CONTROLS -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
             <div class="relative w-full md:w-96">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
-                <input type="text" id="search-input" placeholder="Cari nama, NIP, atau jabatan..." 
-                    class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-blue-500 focus:bg-white transition-all">
+                <input type="text" id="search-input" placeholder="Cari nama, NIP, atau jabatan..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-blue-500 focus:bg-white transition-all">
             </div>
             <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-                <button onclick="filterStatus('ALL')" class="filter-btn active bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">Semua</button>
-                <button onclick="filterStatus('ASN')" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">ASN</button>
-                <button onclick="filterStatus('JLOP / TT')" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">JLOP / TT</button>
-                <button onclick="filterStatus('Pihak Ketiga')" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">Pihak Ketiga</button>
+                <button onclick="filterStatus('ALL')" class="filter-btn active bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer">Semua</button>
+                <button onclick="filterStatus('ASN')" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer">ASN</button>
+                <button onclick="filterStatus('JLOP / TT')" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer">JLOP / TT</button>
+                <button onclick="filterStatus('Pihak Ketiga')" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer">Pihak Ketiga</button>
             </div>
         </div>
 
-        <!-- EMPLOYEE GRID GRID -->
         <div id="loading-state" class="text-center py-12">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-2"></div>
             <p class="text-xs text-slate-500 font-medium">Sinkronisasi database spreadsheet...</p>
@@ -88,13 +69,11 @@
         <div id="employee-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
     </main>
 
-    <!-- FLOATING POPUP DETAIL MODAL -->
+    <!-- MODAL 1: DETAIL PEGAWAI -->
     <div id="detail-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden transform scale-95 transition-all duration-200">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden transform scale-95 transition-all">
             <div class="bg-linear-to-r from-blue-600 to-indigo-700 p-6 text-white relative">
-                <button onclick="closeModal()" class="absolute top-4 right-4 text-white/80 hover:text-white bg-white/10 p-1.5 rounded-full hover:bg-white/20 transition-all cursor-pointer">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-white/80 hover:text-white bg-white/10 p-1.5 rounded-full cursor-pointer"><i data-lucide="x" class="w-4 h-4"></i></button>
                 <span id="modal-badge" class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-md bg-white/20 tracking-wider">ASN</span>
                 <h3 id="modal-nama" class="text-lg font-bold mt-2">Nama Pegawai</h3>
                 <p id="modal-jabatan" class="text-xs text-blue-100 mt-0.5">Jabatan Pegawai</p>
@@ -103,12 +82,54 @@
         </div>
     </div>
 
+    <!-- MODAL 2: FORM TAMBAH PELATIHAN -->
+    <div id="form-pelatihan-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="text-sm font-bold text-slate-800">Tambah Riwayat Pelatihan</h3>
+                <button onclick="closeFormPelatihan()" class="text-slate-400 hover:text-slate-600 cursor-pointer"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form id="form-pelatihan" onsubmit="submitPelatihan(event)" class="p-5 space-y-3">
+                <input type="hidden" id="input-nik" name="NIK">
+                
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nama Pelatihan / Diklat *</label>
+                    <input type="text" id="input-nama-pelatihan" required placeholder="Contoh: Pelatihan Pelayanan Kesehatan" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tahun *</label>
+                        <input type="number" id="input-tahun" required placeholder="2024" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Penyelenggara *</label>
+                        <input type="text" id="input-penyelenggara" required placeholder="Dinkes / Kemenkes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nomor Sertifikat</label>
+                    <input type="text" id="input-no-sertifikat" placeholder="123/SERT/2024" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Upload Sertifikat (PDF / Foto)</label>
+                    <input type="file" id="input-file-sertifikat" accept="image/*,application/pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                </div>
+
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeFormPelatihan()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">Batal</button>
+                    <button type="submit" id="btn-submit-pelatihan" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer flex items-center gap-1.5">
+                        <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // PASTE URL GOOGLE APPS SCRIPT KANAN DI SINI
         const API_URL = "https://script.google.com/macros/s/AKfycbwqiivs1Re3C2dEdnK95Gy0Ast_ATdjdfTpXnYNyosBLZs5W6wl1EEgRna1AvJLqs2c/exec";
-        
         let allEmployees = [];
         let currentFilter = 'ALL';
+        let activePegawai = null;
 
         async function fetchEmployeeData() {
             try {
@@ -122,7 +143,7 @@
                 renderEmployees();
             } catch (error) {
                 console.error(error);
-                document.getElementById('loading-state').innerHTML = `<p class="text-rose-500 font-medium text-xs">Gagal sinkronisasi data. Periksa pengaturan deployment URL Web App Script Anda.</p>`;
+                document.getElementById('loading-state').innerHTML = `<p class="text-rose-500 font-medium text-xs">Gagal sinkronisasi data.</p>`;
             }
         }
 
@@ -157,7 +178,7 @@
                 if(p.STATUS === 'Pihak Ketiga') badgeColor = 'bg-rose-100 text-rose-700';
 
                 const card = document.createElement('div');
-                card.className = 'bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md hover:border-blue-400 transition-all duration-200 cursor-pointer flex flex-col justify-between';
+                card.className = 'bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md hover:border-blue-400 transition-all cursor-pointer flex flex-col justify-between';
                 card.onclick = () => openModal(p);
                 card.innerHTML = `
                     <div>
@@ -179,6 +200,7 @@
         }
 
         function openModal(pegawai) {
+            activePegawai = pegawai;
             const modal = document.getElementById('detail-modal');
             document.getElementById('modal-nama').innerText = pegawai.NAMA;
             document.getElementById('modal-jabatan').innerText = pegawai.JABATAN || '—';
@@ -190,16 +212,12 @@
                 <div class="grid grid-cols-2 gap-4 border-b border-slate-100 pb-3">
                     <div class="flex items-start gap-2.5">
                         <div class="text-slate-400 mt-0.5"><i data-lucide="credit-card" class="w-4 h-4"></i></div>
-                        <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">NIK KTP</p><p class="text-xs font-semibold text-slate-800">${pegawai.NIK}</p></div>
+                        <div><p class="text-[10px] font-medium text-slate-400 uppercase">NIK KTP</p><p class="text-xs font-semibold text-slate-800">${pegawai.NIK}</p></div>
                     </div>
                     <div class="flex items-start gap-2.5">
                         <div class="text-slate-400 mt-0.5"><i data-lucide="hash" class="w-4 h-4"></i></div>
-                        <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">NPWP</p><p class="text-xs font-semibold text-slate-800">${pegawai.NPWP}</p></div>
+                        <div><p class="text-[10px] font-medium text-slate-400 uppercase">NPWP</p><p class="text-xs font-semibold text-slate-800">${pegawai.NPWP}</p></div>
                     </div>
-                </div>
-                <div class="flex items-start gap-2.5 border-b border-slate-100 pb-3">
-                    <div class="text-slate-400 mt-0.5"><i data-lucide="calendar" class="w-4 h-4"></i></div>
-                    <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">TMT Jabatan</p><p class="text-xs font-semibold text-slate-800">${pegawai.TMT_JABATAN}</p></div>
                 </div>
             `;
 
@@ -207,34 +225,122 @@
                 detailsHtml += `
                     <div class="flex items-start gap-2.5 border-b border-slate-100 pb-3">
                         <div class="text-slate-400 mt-0.5"><i data-lucide="binary" class="w-4 h-4"></i></div>
-                        <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">NIP / NIPPPK</p><p class="text-xs font-semibold text-slate-800">${pegawai.NIP_NIPPPK}</p></div>
+                        <div><p class="text-[10px] font-medium text-slate-400 uppercase">NIP / NIPPPK</p><p class="text-xs font-semibold text-slate-800">${pegawai.NIP_NIPPPK}</p></div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 border-b border-slate-100 pb-3">
                         <div class="flex items-start gap-2.5">
                             <div class="text-slate-400 mt-0.5"><i data-lucide="award" class="w-4 h-4"></i></div>
-                            <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Pangkat & Jenjang</p><p class="text-xs font-semibold text-slate-800">${pegawai.PANGKAT || '—'}</p><p class="text-[11px] text-slate-400 mt-0.5">${pegawai.JENJANG || ''}</p></div>
+                            <div><p class="text-[10px] font-medium text-slate-400 uppercase">Pangkat & Jenjang</p><p class="text-xs font-semibold text-slate-800">${pegawai.PANGKAT || '—'}</p><p class="text-[11px] text-slate-400 mt-0.5">${pegawai.JENJANG || ''}</p></div>
                         </div>
                         <div class="flex items-start gap-2.5">
                             <div class="text-slate-400 mt-0.5"><i data-lucide="layers" class="w-4 h-4"></i></div>
-                            <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Golongan Ruang</p><p class="text-xs font-semibold text-slate-800">${pegawai.GOL_RUANG || '—'}</p></div>
+                            <div><p class="text-[10px] font-medium text-slate-400 uppercase">Golongan Ruang</p><p class="text-xs font-semibold text-slate-800">${pegawai.GOL_RUANG || '—'}</p></div>
                         </div>
-                    </div>
-                    <div class="flex items-start gap-2.5 border-b border-slate-100 pb-3">
-                        <div class="text-slate-400 mt-0.5"><i data-lucide="calendar-check" class="w-4 h-4"></i></div>
-                        <div><p class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">TMT Pangkat/Golongan</p><p class="text-xs font-semibold text-slate-800">${pegawai.TMT_PANGKAT}</p></div>
                     </div>
                 `;
             }
+
+            // RIWAYAT PELATIHAN SECTION
+            detailsHtml += `
+                <div class="pt-2">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="graduation-cap" class="w-4 h-4 text-blue-600"></i>
+                            <h4 class="text-xs font-bold text-slate-800 uppercase">Riwayat Pelatihan / Diklat</h4>
+                        </div>
+                        <button onclick="openFormPelatihan()" class="px-2.5 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah
+                        </button>
+                    </div>
+            `;
+
+            if(pegawai.PELATIHAN && pegawai.PELATIHAN.length > 0) {
+                detailsHtml += `<div class="space-y-2">`;
+                pegawai.PELATIHAN.forEach(item => {
+                    detailsHtml += `
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold text-slate-800">${item.NAMA_PELATIHAN}</p>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Penyelenggara: <span class="text-slate-700 font-medium">${item.PENYELENGGARA}</span> (${item.TAHUN})</p>
+                                <p class="text-[10px] text-slate-400 font-mono mt-0.5">No. Sertifikat: ${item.NO_SERTIFIKAT}</p>
+                            </div>
+                            ${item.URL_SERTIFIKAT ? `<a href="${item.URL_SERTIFIKAT}" target="_blank" class="p-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 text-[10px] font-medium flex items-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Lihat</a>` : ''}
+                        </div>
+                    `;
+                });
+                detailsHtml += `</div>`;
+            } else {
+                detailsHtml += `<p class="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200 text-center">Belum ada data riwayat pelatihan.</p>`;
+            }
+
+            detailsHtml += `</div>`;
 
             bodyContent.innerHTML = detailsHtml;
             modal.classList.remove('hidden');
             lucide.createIcons();
         }
 
-        function closeModal() {
-            document.getElementById('detail-modal').classList.add('hidden');
+        function openFormPelatihan() {
+            if(!activePegawai) return;
+            document.getElementById('input-nik').value = activePegawai.NIK;
+            document.getElementById('form-pelatihan').reset();
+            document.getElementById('form-pelatihan-modal').classList.remove('hidden');
         }
 
+        function closeFormPelatihan() {
+            document.getElementById('form-pelatihan-modal').classList.add('hidden');
+        }
+
+        async function submitPelatihan(event) {
+            event.preventDefault();
+            const btnSubmit = document.getElementById('btn-submit-pelatihan');
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Menyimpan...`;
+
+            const fileInput = document.getElementById('input-file-sertifikat');
+            let fileBase64 = "", fileName = "", fileMime = "";
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileName = file.name;
+                fileMime = file.type;
+                fileBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const payload = {
+                "NIK": document.getElementById('input-nik').value,
+                "NAMA_PELATIHAN": document.getElementById('input-nama-pelatihan').value,
+                "TAHUN": document.getElementById('input-tahun').value,
+                "PENYELENGGARA": document.getElementById('input-penyelenggara').value,
+                "NO_SERTIFIKAT": document.getElementById('input-no-sertifikat').value || "—",
+                "FILE_BASE64": fileBase64,
+                "FILE_NAME": fileName,
+                "FILE_MIME": fileMime
+            };
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                alert("Data pelatihan berhasil disimpan!");
+                closeFormPelatihan();
+                closeModal();
+                fetchEmployeeData(); // Refresh data dashboard
+            } catch (err) {
+                alert("Gagal menyimpan data.");
+                console.error(err);
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan`;
+            }
+        }
+
+        function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
         function filterStatus(status) {
             currentFilter = status;
             document.querySelectorAll('.filter-btn').forEach(btn => {
