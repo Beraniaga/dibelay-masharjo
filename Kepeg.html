@@ -112,10 +112,15 @@
                     <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nomor Sertifikat</label>
                     <input type="text" id="input-no-sertifikat" placeholder="123/SERT/2024" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
                 </div>
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">Upload Sertifikat (PDF / Foto)</label>
-                    <input type="file" id="input-file-sertifikat" accept="image/*,application/pdf" class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                </div>
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-xl space-y-2">
+				    <label class="block text-[11px] font-semibold text-slate-700">Lampiran Sertifikat (Opsional)</label>
+				    <div id="drive-picker-status" class="flex items-center justify-between">
+				        <span id="file-status-text" class="text-[11px] text-slate-500 italic">Belum ada file dipilih</span>
+				        <button type="button" onclick="triggerPickerFromModal()" class="px-2.5 py-1 bg-white border border-blue-200 text-blue-600 hover:bg-blue-100 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all shadow-sm">
+				            <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i> Pilih dari Drive
+				        </button>
+				    </div>
+				</div>
 
                 <div class="pt-3 flex justify-end gap-2">
                     <button type="button" onclick="closeFormPelatihan()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">Batal</button>
@@ -295,58 +300,44 @@
             lucide.createIcons();
         }
 
-        function openFormPelatihan() {
-            if(!activePegawai) return;
-            document.getElementById('input-nik').value = activePegawai.NIK;
-            document.getElementById('form-pelatihan').reset();
-            document.getElementById('form-pelatihan-modal').classList.remove('hidden');
-        }
+		function openFormPelatihan() {
+		    if(!activePegawai) return;
+		    tempDriveUrl = ""; // Reset
+		    document.getElementById('file-status-text').innerText = "Belum ada file dipilih";
+		    document.getElementById('file-status-text').classList.replace('text-emerald-600', 'text-slate-500');
+		    
+		    document.getElementById('input-nik').value = activePegawai.NIK;
+		    document.getElementById('form-pelatihan').reset();
+		    document.getElementById('form-pelatihan-modal').classList.remove('hidden');
+		}
 
         function closeFormPelatihan() {
             document.getElementById('form-pelatihan-modal').classList.add('hidden');
         }
 
-        // FUNGSI SUBMIT DIBERSIHKAN (MURNI UNTUK MENYIMPAN TEKS RIWAYAT)
-        async function submitPelatihan(event) {
-            event.preventDefault();
-            const btnSubmit = document.getElementById('btn-submit-pelatihan');
-            btnSubmit.disabled = true;
-            btnSubmit.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Menyimpan...`;
+// Update fungsi Simpan di dalam modal
+async function submitPelatihan(event) {
+    event.preventDefault();
+    const btnSubmit = document.getElementById('btn-submit-pelatihan');
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Menyimpan...`;
 
-            const payload = {
-                "NIK": document.getElementById('input-nik').value,
-                "NAMA_PELATIHAN": document.getElementById('input-nama-pelatihan').value,
-                "TAHUN": document.getElementById('input-tahun').value,
-                "PENYELENGGARA": document.getElementById('input-penyelenggara').value,
-                "NO_SERTIFIKAT": document.getElementById('input-no-sertifikat').value || "—",
-                "URL_SERTIFIKAT": "" // Default kosong, diisi saat upload via Drive Picker
-            };
+    const payload = {
+        "NIK": document.getElementById('input-nik').value,
+        "NAMA_PELATIHAN": document.getElementById('input-nama-pelatihan').value,
+        "TAHUN": document.getElementById('input-tahun').value,
+        "PENYELENGGARA": document.getElementById('input-penyelenggara').value,
+        "NO_SERTIFIKAT": document.getElementById('input-no-sertifikat').value || "—",
+        "URL_SERTIFIKAT": tempDriveUrl // Kalau user pilih file, ini ada isinya. Kalau tidak, kosong.
+    };
 
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                alert("Data pelatihan berhasil disimpan!");
-                closeFormPelatihan();
-                closeModal();
-                
-                setTimeout(() => {
-                    fetchEmployeeData();
-                }, 1000);
-
-            } catch (err) {
-                alert("Terjadi kesalahan jaringan saat menyimpan data.");
-                console.error(err);
-            } finally {
-                btnSubmit.disabled = false;
-                btnSubmit.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan`;
-            }
-        }
+    await sendDataToScript(payload);
+    
+    // Reset setelah simpan
+    tempDriveUrl = ""; 
+    btnSubmit.disabled = false;
+    btnSubmit.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan`;
+}
 
         function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
         
@@ -371,6 +362,7 @@
 		let accessToken = null;
 		let selectedNik = null;
 		let selectedPelatihanName = null;
+		let tempDriveUrl = ""; 
 
 	function openDrivePicker(nik, namaPelatihan) {
     selectedNik = nik;
@@ -414,21 +406,21 @@ function createPicker() {
     if (!accessToken) return;
 
     try {
-        // Pastikan google.picker sudah terisi
-        if (!google.picker) {
-            gapi.load('picker', createPicker);
-            return;
-        }
+        // 1. Definisikan tampilan-tampilan yang mau dimunculkan
+        const uploadView = new google.picker.DocsUploadView().setParent(FOLDER_ID); // Tab Upload
+        const driveView = new google.picker.DocsView().setIncludeFolders(true);   // Tab Drive Saya
+        const recentView = new google.picker.RecentView();                        // Tab Terbaru
 
-        const uploadView = new google.picker.DocsUploadView()
-            .setParent(FOLDER_ID);
-
+        // 2. Gabungkan semuanya ke dalam Picker
         const picker = new google.picker.PickerBuilder()
-            .addView(uploadView)
+            .addView(uploadView) // Tab ke-1
+            .addView(driveView)  // Tab ke-2
+            .addView(recentView) // Tab ke-3
+            .enableFeature(google.picker.Feature.NAV_HIDDEN) // Opsional: Sembunyikan navigasi kiri biar lebih bersih
             .setOAuthToken(accessToken)
             .setDeveloperKey(API_KEY)
             .setCallback(pickerCallback)
-            .setTitle("Upload Sertifikat Pelatihan")
+            .setTitle("Sisipkan Sertifikat") // Judul di atas pop-up
             .build();
             
         picker.setVisible(true);
@@ -437,29 +429,58 @@ function createPicker() {
         alert("Gagal memuat Google Drive Picker: " + err.message);
     }
 }
-		// 3. Callback Setelah Pegawai Selesai Upload File di Pop-up
-		async function pickerCallback(data) {
-			if (data.action === google.picker.Action.PICKED) {
-				const file = data.docs[0];
-				const fileUrl = file.url; // Tautan file di Google Drive
+		
+// Pemicu dari dalam modal form
+function triggerPickerFromModal() {
+    // Kita panggil fungsi openDrivePicker, tapi dengan tanda khusus
+    // Kita pakai variabel global 'tempDriveUrl' untuk menandakan kita lagi di form
+    openDrivePicker(activePegawai.NIK, "FORM_MODAL");
+}
 
-				// Kirim URL file ke Apps Script untuk diperbarui di Spreadsheet
-				const payload = {
-					"NIK": selectedNik,
-					"NAMA_PELATIHAN": selectedPelatihanName,
-					"URL_SERTIFIKAT": fileUrl
-				};
+// Perbaikan pickerCallback agar bisa membedakan konteks
+async function pickerCallback(data) {
+    if (data.action === google.picker.Action.PICKED) {
+        const file = data.docs[0];
+        const fileUrl = file.url;
 
-				await fetch(API_URL, {
-					method: 'POST',
-					headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-					body: JSON.stringify(payload)
-				});
+        // CEK: Apakah kita sedang di dalam modal form?
+        const isModalOpen = !document.getElementById('form-pelatihan-modal').classList.contains('hidden');
 
-				alert("Sertifikat berhasil di-upload dan tersambung!");
-				fetchEmployeeData(); // Refresh tampilan dashboard
-			}
-		}
+        if (isModalOpen) {
+            // SKENARIO 1: Update UI saja, belum simpan ke database
+            tempDriveUrl = fileUrl;
+            document.getElementById('file-status-text').innerText = "File berhasil dipilih!";
+            document.getElementById('file-status-text').classList.replace('text-slate-500', 'text-emerald-600');
+            lucide.createIcons();
+        } else {
+            // SKENARIO 2 (Lama): Langsung update ke database via fetch
+            const payload = {
+                "NIK": selectedNik,
+                "NAMA_PELATIHAN": selectedPelatihanName,
+                "URL_SERTIFIKAT": fileUrl
+            };
+            await sendDataToScript(payload);
+        }
+    }
+}
+
+// Fungsi helper kirim data
+async function sendDataToScript(payload) {
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        alert("Data berhasil disimpan!");
+        closeFormPelatihan();
+        closeModal();
+        fetchEmployeeData();
+    } catch (err) {
+        alert("Gagal menyimpan.");
+        console.error(err);
+    }
+}
     </script>
 </body>
 </html>
