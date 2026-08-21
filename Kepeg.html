@@ -370,48 +370,73 @@
 
 		let accessToken = null;
 		let selectedNik = null;
-		let selectedPelatihanIndex = null;
+		let selectedPelatihanName = null;
 
-		// 1. Inisialisasi Google Auth
-		function handleAuthClick() {
-			const tokenClient = google.accounts.oauth2.initTokenClient({
-				client_id: CLIENT_ID,
-				scope: 'https://www.googleapis.com/auth/drive.file',
-				callback: (response) => {
-					if (response.access_token) {
-						accessToken = response.access_token;
-						createPicker();
-					}
-				},
-			});
-			tokenClient.requestAccessToken({prompt: 'consent'});
-		}
+	function openDrivePicker(nik, namaPelatihan) {
+    selectedNik = nik;
+    selectedPelatihanName = namaPelatihan;
+    
+    // Pastikan gapi sudah siap
+    if (typeof gapi === 'undefined') {
+        alert("Pustaka Google API belum siap, silakan refresh halaman.");
+        return;
+    }
 
-		// 2. Tampilkan Pop-up Google Drive Picker
-		function openDrivePicker(nik, namaPelatihan) {
-			selectedNik = nik;
-			selectedPelatihanIndex = namaPelatihan;
-			
-			if (!accessToken) {
-				handleAuthClick();
-			} else {
-				createPicker();
-			}
-		}
+    if (!accessToken) {
+        handleAuthClick();
+    } else {
+        // Muat pustaka picker terlebih dahulu sebelum dipanggil
+        gapi.load('picker', createPicker);
+    }
+}
 
-		function createPicker() {
-			const view = new google.picker.DocsUploadView()
-				.setParent(FOLDER_ID); // Otomatis simpan ke folder sertifikat kamu
+// FUNGSI 2: OTORISASI AKUN GOOGLE
+function handleAuthClick() {
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: (response) => {
+            if (response.error !== undefined) {
+                console.error("Auth error:", response);
+                return;
+            }
+            accessToken = response.access_token;
+            
+            // Panggil gapi.load untuk memastikan google.picker tidak undefined
+            gapi.load('picker', createPicker);
+        },
+    });
+    tokenClient.requestAccessToken({ prompt: '' });
+}
 
-			const picker = new google.picker.PickerBuilder()
-				.addView(view)
-				.setOAuthToken(accessToken)
-				.setDeveloperKey(API_KEY)
-				.setCallback(pickerCallback)
-				.build();
-			picker.setVisible(true);
-		}
+// FUNGSI 3: MEMBUAT DAN MENAMPILKAN JENDELA PICKER
+function createPicker() {
+    if (!accessToken) return;
 
+    try {
+        // Pastikan google.picker sudah terisi
+        if (!google.picker) {
+            gapi.load('picker', createPicker);
+            return;
+        }
+
+        const uploadView = new google.picker.DocsUploadView()
+            .setParent(FOLDER_ID);
+
+        const picker = new google.picker.PickerBuilder()
+            .addView(uploadView)
+            .setOAuthToken(accessToken)
+            .setDeveloperKey(API_KEY)
+            .setCallback(pickerCallback)
+            .setTitle("Upload Sertifikat Pelatihan")
+            .build();
+            
+        picker.setVisible(true);
+    } catch (err) {
+        console.error("Error Picker:", err);
+        alert("Gagal memuat Google Drive Picker: " + err.message);
+    }
+}
 		// 3. Callback Setelah Pegawai Selesai Upload File di Pop-up
 		async function pickerCallback(data) {
 			if (data.action === google.picker.Action.PICKED) {
@@ -421,7 +446,7 @@
 				// Kirim URL file ke Apps Script untuk diperbarui di Spreadsheet
 				const payload = {
 					"NIK": selectedNik,
-					"NAMA_PELATIHAN": selectedPelatihanIndex,
+					"NAMA_PELATIHAN": selectedPelatihanName,
 					"URL_SERTIFIKAT": fileUrl
 				};
 
