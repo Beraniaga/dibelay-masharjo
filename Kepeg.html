@@ -406,21 +406,32 @@ function createPicker() {
     if (!accessToken) return;
 
     try {
-        // 1. Definisikan tampilan-tampilan yang mau dimunculkan
-        const uploadView = new google.picker.DocsUploadView().setParent(FOLDER_ID); // Tab Upload
-        const driveView = new google.picker.DocsView().setIncludeFolders(true);   // Tab Drive Saya
-        const recentView = new google.picker.RecentView();                        // Tab Terbaru
+        // Pastikan google.picker sudah terisi
+        if (!google.picker) {
+            gapi.load('picker', createPicker);
+            return;
+        }
 
-        // 2. Gabungkan semuanya ke dalam Picker
+        // 1. UPLOAD VIEW (Untuk upload file baru)
+        const uploadView = new google.picker.DocsUploadView().setParent(FOLDER_ID);
+
+        // 2. DRIVE SAYA VIEW (Untuk cari file di Drive user)
+        const driveView = new google.picker.DocsView(google.picker.ViewId.DOCS)
+            .setIncludeFolders(true)
+            .setMimeTypes('application/pdf,image/png,image/jpeg'); // Biar user cuma lihat PDF/Gambar
+
+        // 3. TERBARU VIEW (Mengganti RecentView yang error tadi)
+        const recentView = new google.picker.DocsView(google.picker.ViewId.RECENTLY_PICKED);
+
+        // 4. Gabungkan
         const picker = new google.picker.PickerBuilder()
-            .addView(uploadView) // Tab ke-1
-            .addView(driveView)  // Tab ke-2
-            .addView(recentView) // Tab ke-3
-            .enableFeature(google.picker.Feature.NAV_HIDDEN) // Opsional: Sembunyikan navigasi kiri biar lebih bersih
+            .addView(uploadView)
+            .addView(driveView)
+            .addView(recentView)
             .setOAuthToken(accessToken)
             .setDeveloperKey(API_KEY)
             .setCallback(pickerCallback)
-            .setTitle("Sisipkan Sertifikat") // Judul di atas pop-up
+            .setTitle("Sisipkan Sertifikat")
             .build();
             
         picker.setVisible(true);
