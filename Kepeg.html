@@ -6,6 +6,8 @@
     <title>Dashboard Database Kepegawaian</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+	<script src="https://apis.google.com/js/api.js"></script>
+	<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
 
@@ -248,7 +250,7 @@
                             <i data-lucide="graduation-cap" class="w-4 h-4 text-blue-600"></i>
                             <h4 class="text-xs font-bold text-slate-800 uppercase">Riwayat Pelatihan / Diklat</h4>
                         </div>
-                        <button onclick="openFormPelatihan()" class="px-2.5 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer">
+                        <button onclick="openFormPelatihan()" class="px-2.5 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah
                         </button>
                     </div>
@@ -258,13 +260,26 @@
                 detailsHtml += `<div class="space-y-2">`;
                 pegawai.PELATIHAN.forEach(item => {
                     detailsHtml += `
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 flex justify-between items-start">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 flex justify-between items-center gap-2">
                             <div>
                                 <p class="text-xs font-bold text-slate-800">${item.NAMA_PELATIHAN}</p>
                                 <p class="text-[11px] text-slate-500 mt-0.5">Penyelenggara: <span class="text-slate-700 font-medium">${item.PENYELENGGARA}</span> (${item.TAHUN})</p>
                                 <p class="text-[10px] text-slate-400 font-mono mt-0.5">No. Sertifikat: ${item.NO_SERTIFIKAT}</p>
                             </div>
-                            ${item.URL_SERTIFIKAT ? `<a href="${item.URL_SERTIFIKAT}" target="_blank" class="p-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 text-[10px] font-medium flex items-center gap-1"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> Lihat</a>` : ''}
+                            
+                            <div>
+                                ${item.URL_SERTIFIKAT ? 
+                                    `<!-- JIKA SUDAH ADA SERTIFIKAT -->
+                                     <a href="${item.URL_SERTIFIKAT}" target="_blank" class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Lihat
+                                     </a>` 
+                                    : 
+                                    `<!-- JIKA BELUM ADA, PANGGAL POPUP GOOGLE DRIVE PICKER -->
+                                     <button onclick="openDrivePicker('${pegawai.NIK}', '${item.NAMA_PELATIHAN}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-all">
+                                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload
+                                     </button>`
+                                }
+                            </div>
                         </div>
                     `;
                 });
@@ -291,25 +306,12 @@
             document.getElementById('form-pelatihan-modal').classList.add('hidden');
         }
 
+        // FUNGSI SUBMIT DIBERSIHKAN (MURNI UNTUK MENYIMPAN TEKS RIWAYAT)
         async function submitPelatihan(event) {
             event.preventDefault();
             const btnSubmit = document.getElementById('btn-submit-pelatihan');
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Menyimpan...`;
-
-            const fileInput = document.getElementById('input-file-sertifikat');
-            let fileBase64 = "", fileName = "", fileMime = "";
-
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                fileName = file.name;
-                fileMime = file.type;
-                fileBase64 = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-            }
 
             const payload = {
                 "NIK": document.getElementById('input-nik').value,
@@ -317,22 +319,28 @@
                 "TAHUN": document.getElementById('input-tahun').value,
                 "PENYELENGGARA": document.getElementById('input-penyelenggara').value,
                 "NO_SERTIFIKAT": document.getElementById('input-no-sertifikat').value || "—",
-                "FILE_BASE64": fileBase64,
-                "FILE_NAME": fileName,
-                "FILE_MIME": fileMime
+                "URL_SERTIFIKAT": "" // Default kosong, diisi saat upload via Drive Picker
             };
 
             try {
                 await fetch(API_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
                     body: JSON.stringify(payload)
                 });
+
                 alert("Data pelatihan berhasil disimpan!");
                 closeFormPelatihan();
                 closeModal();
-                fetchEmployeeData(); // Refresh data dashboard
+                
+                setTimeout(() => {
+                    fetchEmployeeData();
+                }, 1000);
+
             } catch (err) {
-                alert("Gagal menyimpan data.");
+                alert("Terjadi kesalahan jaringan saat menyimpan data.");
                 console.error(err);
             } finally {
                 btnSubmit.disabled = false;
@@ -341,6 +349,7 @@
         }
 
         function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+        
         function filterStatus(status) {
             currentFilter = status;
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -354,6 +363,78 @@
 
         document.getElementById('search-input').addEventListener('input', renderEmployees);
         window.onload = fetchEmployeeData;
+		
+		const API_KEY = 'AIzaSyDzjBCy1vYSM7Ku-4LZpvv6kJQxnTYiuFc';
+		const CLIENT_ID = '822583215956-tf2nf9dk4u4jlfae11j6o4g8js0r67tn.apps.googleusercontent.com';
+		const FOLDER_ID = '1TArKZuogbM_z1j1-rtiHOgHEen3Rv80a';
+
+		let accessToken = null;
+		let selectedNik = null;
+		let selectedPelatihanIndex = null;
+
+		// 1. Inisialisasi Google Auth
+		function handleAuthClick() {
+			const tokenClient = google.accounts.oauth2.initTokenClient({
+				client_id: CLIENT_ID,
+				scope: 'https://www.googleapis.com/auth/drive.file',
+				callback: (response) => {
+					if (response.access_token) {
+						accessToken = response.access_token;
+						createPicker();
+					}
+				},
+			});
+			tokenClient.requestAccessToken({prompt: 'consent'});
+		}
+
+		// 2. Tampilkan Pop-up Google Drive Picker
+		function openDrivePicker(nik, namaPelatihan) {
+			selectedNik = nik;
+			selectedPelatihanIndex = namaPelatihan;
+			
+			if (!accessToken) {
+				handleAuthClick();
+			} else {
+				createPicker();
+			}
+		}
+
+		function createPicker() {
+			const view = new google.picker.DocsUploadView()
+				.setParent(FOLDER_ID); // Otomatis simpan ke folder sertifikat kamu
+
+			const picker = new google.picker.PickerBuilder()
+				.addView(view)
+				.setOAuthToken(accessToken)
+				.setDeveloperKey(API_KEY)
+				.setCallback(pickerCallback)
+				.build();
+			picker.setVisible(true);
+		}
+
+		// 3. Callback Setelah Pegawai Selesai Upload File di Pop-up
+		async function pickerCallback(data) {
+			if (data.action === google.picker.Action.PICKED) {
+				const file = data.docs[0];
+				const fileUrl = file.url; // Tautan file di Google Drive
+
+				// Kirim URL file ke Apps Script untuk diperbarui di Spreadsheet
+				const payload = {
+					"NIK": selectedNik,
+					"NAMA_PELATIHAN": selectedPelatihanIndex,
+					"URL_SERTIFIKAT": fileUrl
+				};
+
+				await fetch(API_URL, {
+					method: 'POST',
+					headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+					body: JSON.stringify(payload)
+				});
+
+				alert("Sertifikat berhasil di-upload dan tersambung!");
+				fetchEmployeeData(); // Refresh tampilan dashboard
+			}
+		}
     </script>
 </body>
 </html>
