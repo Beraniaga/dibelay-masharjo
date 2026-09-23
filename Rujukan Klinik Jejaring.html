@@ -367,84 +367,87 @@
     }
 
     // Submit Form
-    async function submitForm(e) {
-      e.preventDefault();
+// Submit Form
+async function submitForm(e) {
+  e.preventDefault();
 
-      if (!validateDiagnosa()) return;
-      if (!isAgeValid) {
-        alert("Pasien belum memenuhi kriteria usia minimal 40 tahun.");
-        return;
-      }
+  if (!validateDiagnosa()) return;
+  if (!isAgeValid) {
+    alert("Pasien belum memenuhi kriteria usia minimal 40 tahun.");
+    return;
+  }
 
-      if (!API_URL || API_URL.trim() === "") {
-        alert("Atur variabel API_URL di dalam tag <script> file HTML terlebih dahulu!");
-        return;
-      }
+  if (!API_URL || API_URL.trim() === "") {
+    alert("Atur variabel API_URL di dalam tag <script> file HTML terlebih dahulu!");
+    return;
+  }
 
-      // Kumpulkan data
-      const diagList = [];
-      if (document.getElementById("diagHT").checked) diagList.push("HT");
-      if (document.getElementById("diagDM").checked) diagList.push("DM");
+  // Kumpulkan data
+  const diagList = [];
+  if (document.getElementById("diagHT").checked) diagList.push("HT");
+  if (document.getElementById("diagDM").checked) diagList.push("DM");
 
-      const payload = {
-        namaKlinik: document.getElementById("namaKlinik").value,
-        tglKunjungan: document.getElementById("tglKunjungan").value,
-        namaPasien: document.getElementById("namaPasien").value,
-        nikBpjs: document.getElementById("nikBpjs").value,
-        tglLahir: document.getElementById("tglLahir").value,
-        diagnosa: diagList.join(" & ")
-      };
+  const payload = {
+    namaKlinik: document.getElementById("namaKlinik").value,
+    tglKunjungan: document.getElementById("tglKunjungan").value,
+    namaPasien: document.getElementById("namaPasien").value,
+    nikBpjs: document.getElementById("nikBpjs").value,
+    tglLahir: document.getElementById("tglLahir").value,
+    diagnosa: diagList.join(" & ")
+  };
 
-      // UI Loading
-      const submitBtn = document.getElementById("submitBtn");
-      const btnIcon = document.getElementById("btnIcon");
-      const btnText = document.getElementById("btnText");
+  // UI Loading
+  const submitBtn = document.getElementById("submitBtn");
+  const btnIcon = document.getElementById("btnIcon");
+  const btnText = document.getElementById("btnText");
 
-      submitBtn.disabled = true;
-      btnIcon.className = "fa-solid fa-spinner fa-spin";
-      btnText.innerText = "Mengunci Kuota & Mengirim...";
+  submitBtn.disabled = true;
+  btnIcon.className = "fa-solid fa-spinner fa-spin";
+  btnText.innerText = "Mengunci Kuota & Mengirim...";
 
-      try {
-        // Post Data
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
+  try {
+    // SOLUSI: Tempelkan ?tgl=... di URL agar tidak hilang saat redirect 302 oleh browser
+    const targetUrl = `${API_URL}?tgl=${payload.tglKunjungan}`;
 
-        const result = await response.json();
+    const response = await fetch(targetUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload)
+    });
 
-        if (result.status === "success") {
-          // Tampilkan Modal Tiket
-          const randomNum = Math.floor(1000 + Math.random() * 9000);
-          document.getElementById("resTicketCode").innerText = `RJK-${payload.tglKunjungan.replace(/-/g, '')}-${randomNum}`;
-          document.getElementById("resNama").innerText = payload.namaPasien;
-          document.getElementById("resNik").innerText = payload.nikBpjs;
-          document.getElementById("resTgl").innerText = payload.tglKunjungan;
-          document.getElementById("resKlinik").innerText = payload.namaKlinik;
-          document.getElementById("resDiagnosa").innerText = payload.diagnosa;
+    const result = await response.json();
 
-          document.getElementById("ticketModal").classList.remove("hidden");
-          
-          // Reset form & Refresh Kuota
-          document.getElementById("referralForm").reset();
-          document.getElementById("ageBadge").classList.add("hidden");
-          isAgeValid = false;
-          checkQuota();
-        } else {
-          alert("⚠️ " + result.message);
-          checkQuota();
-        }
+    if (result.status === "success") {
+      // Tampilkan Modal Tiket
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById("resTicketCode").innerText = `RJK-${payload.tglKunjungan.replace(/-/g, '')}-${randomNum}`;
+      document.getElementById("resNama").innerText = payload.namaPasien;
+      document.getElementById("resNik").innerText = payload.nikBpjs;
+      document.getElementById("resTgl").innerText = payload.tglKunjungan;
+      document.getElementById("resKlinik").innerText = payload.namaKlinik;
+      document.getElementById("resDiagnosa").innerText = payload.diagnosa;
 
-      } catch (error) {
-        console.error("Error Submit Form:", error);
-        alert("Gagal mengirim data. Pastikan jaringan internet stabil dan Web App Apps Script dideploy dengan akses 'Anyone'.");
-      } finally {
-        submitBtn.disabled = false;
-        btnIcon.className = "fa-solid fa-paper-plane";
-        btnText.innerText = "Kirim Rujukan & Kunci Kuota";
-      }
+      document.getElementById("ticketModal").classList.remove("hidden");
+      
+      // Reset form & Refresh Kuota
+      document.getElementById("referralForm").reset();
+      document.getElementById("ageBadge").classList.add("hidden");
+      isAgeValid = false;
+      checkQuota();
+    } else {
+      alert("⚠️ " + result.message);
+      checkQuota();
     }
+
+  } catch (error) {
+    console.error("Error Submit Form:", error);
+    alert("Gagal mengirim data. Pastikan jaringan internet stabil dan Web App Apps Script dideploy dengan akses 'Anyone'.");
+  } finally {
+    submitBtn.disabled = false;
+    btnIcon.className = "fa-solid fa-paper-plane";
+    btnText.innerText = "Kirim Rujukan & Kunci Kuota";
+  }
+}
 
     function closeModal() {
       document.getElementById("ticketModal").classList.add("hidden");
