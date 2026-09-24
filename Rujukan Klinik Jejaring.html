@@ -308,9 +308,13 @@
       }
     }
 
-// Cek Kuota Realtime & Render Transparansi Slot (Dengan Cache-Buster)
+// Variable untuk mencegah tabrakan async request
+let currentQuotaRequestId = 0;
+
+// 1. Cek Kuota Realtime (Anti-Bouncing / Anti-Overriding)
 async function checkQuota() {
-  const tgl = document.getElementById("tglKunjungan").value;
+  const tglInput = document.getElementById("tglKunjungan");
+  const tgl = tglInput ? tglInput.value : "";
   const displayDateText = document.getElementById("displayDateText");
   const ratioEl = document.getElementById("quotaRatio");
   const badge = document.getElementById("quotaBadge");
@@ -322,7 +326,7 @@ async function checkQuota() {
 
   if (!tgl) return;
 
-  // Format tanggal ke Bahasa Indonesia untuk Tampilan
+  // Format tanggal ke Bahasa Indonesia
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const dateObj = new Date(tgl + 'T00:00:00');
   displayDateText.innerText = dateObj.toLocaleDateString('id-ID', options);
@@ -333,14 +337,21 @@ async function checkQuota() {
     return;
   }
 
-  // Tampilkan Status Loading
+  // KUNCI UTAMA: Buat ID unik untuk request saat ini
+  const requestId = ++currentQuotaRequestId;
+
   spinner.classList.remove("hidden");
   badgeText.innerText = "Memeriksa Kuota...";
 
   try {
-    // FITUR UTAMA: Tambahkan &_nc=${Date.now()} biar browser tidak nge-cache respon lama
     const response = await fetch(`${API_URL}?tgl=${tgl}&_nc=${Date.now()}`);
     const data = await response.json();
+
+    // PENTING: Jika ada request baru yang jalan setelah ini, ABAIKAN respon lama ini!
+    if (requestId !== currentQuotaRequestId) {
+      return; 
+    }
+
     spinner.classList.add("hidden");
 
     if (data.status === "success") {
@@ -364,7 +375,7 @@ async function checkQuota() {
         isQuotaAvailable = true;
       }
 
-      // Render Rincian Transparansi Slot 1, 2, dan 3
+      // Render Transparansi Slot
       if (slotBreakdownSection && slotListContainer) {
         slotBreakdownSection.classList.remove("hidden");
         slotListContainer.innerHTML = "";
@@ -374,7 +385,6 @@ async function checkQuota() {
           const clinicName = bookedClinics[i];
 
           if (clinicName) {
-            // Slot Terisi (Warna Merah)
             slotListContainer.innerHTML += `
               <div class="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">
                 <div>
@@ -385,7 +395,6 @@ async function checkQuota() {
               </div>
             `;
           } else {
-            // Slot Masih Kosong (Warna Hijau)
             slotListContainer.innerHTML += `
               <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
                 <div>
@@ -404,15 +413,16 @@ async function checkQuota() {
       isQuotaAvailable = false;
     }
   } catch (err) {
-    spinner.classList.add("hidden");
-    console.error("Error Fetch Kuota:", err);
-    badgeText.innerText = "Gagal koneksi API";
-    isQuotaAvailable = false;
+    if (requestId === currentQuotaRequestId) {
+      spinner.classList.add("hidden");
+      console.error("Error Fetch Kuota:", err);
+      badgeText.innerText = "Gagal koneksi API";
+      isQuotaAvailable = false;
+    }
   }
 
   updateSubmitButtonState();
 }
-
     function updateSubmitButtonState() {
       const btn = document.getElementById("submitBtn");
       if (isAgeValid && isQuotaAvailable) {
@@ -422,7 +432,6 @@ async function checkQuota() {
       }
     }
 
-    // Submit Form
 // Submit Form
 async function submitForm(e) {
   e.preventDefault();
@@ -434,25 +443,25 @@ async function submitForm(e) {
   }
 
   if (!API_URL || API_URL.trim() === "") {
-    alert("Atur variabel API_URL di dalam tag <script> file HTML terlebih dahulu!");
+    alert("Atur variabel API_URL terlebih dahulu!");
     return;
   }
 
-  // Kumpulkan data
   const diagList = [];
   if (document.getElementById("diagHT").checked) diagList.push("HT");
   if (document.getElementById("diagDM").checked) diagList.push("DM");
 
+  const selectedDate = document.getElementById("tglKunjungan").value;
+
   const payload = {
     namaKlinik: document.getElementById("namaKlinik").value,
-    tglKunjungan: document.getElementById("tglKunjungan").value,
+    tglKunjungan: selectedDate,
     namaPasien: document.getElementById("namaPasien").value,
     nikBpjs: document.getElementById("nikBpjs").value,
     tglLahir: document.getElementById("tglLahir").value,
     diagnosa: diagList.join(" & ")
   };
 
-  // UI Loading
   const submitBtn = document.getElementById("submitBtn");
   const btnIcon = document.getElementById("btnIcon");
   const btnText = document.getElementById("btnText");
@@ -462,7 +471,6 @@ async function submitForm(e) {
   btnText.innerText = "Mengunci Kuota & Mengirim...";
 
   try {
-    // SOLUSI: Tempelkan ?tgl=... di URL agar tidak hilang saat redirect 302 oleh browser
     const targetUrl = `${API_URL}?tgl=${payload.tglKunjungan}`;
 
     const response = await fetch(targetUrl, {
@@ -485,11 +493,17 @@ async function submitForm(e) {
 
       document.getElementById("ticketModal").classList.remove("hidden");
       
-      // Reset form & Refresh Kuota
+      // Reset form tapi JAGA tanggalnya tetap terisi
       document.getElementById("referralForm").reset();
+      document.getElementById("tglKunjungan").value = selectedDate; 
       document.getElementById("ageBadge").classList.add("hidden");
       isAgeValid = false;
-      checkQuota();
+      
+      // Beri jeda 600ms agar Google Sheets selesai meng-indeks row baru sebelum dipanggil
+      setTimeout(() => {
+        checkQuota();
+      }, 600);
+
     } else {
       alert("⚠️ " + result.message);
       checkQuota();
@@ -497,14 +511,13 @@ async function submitForm(e) {
 
   } catch (error) {
     console.error("Error Submit Form:", error);
-    alert("Gagal mengirim data. Pastikan jaringan internet stabil dan Web App Apps Script dideploy dengan akses 'Anyone'.");
+    alert("Gagal mengirim data. Pastikan jaringan internet stabil.");
   } finally {
     submitBtn.disabled = false;
     btnIcon.className = "fa-solid fa-paper-plane";
     btnText.innerText = "Kirim Rujukan & Kunci Kuota";
   }
 }
-
     function closeModal() {
       document.getElementById("ticketModal").classList.add("hidden");
     }
