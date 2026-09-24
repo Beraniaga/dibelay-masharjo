@@ -308,7 +308,7 @@
       }
     }
 
-// Cek Kuota Realtime & Render Transparansi Slot
+// Cek Kuota Realtime & Render Transparansi Slot (Dengan Cache-Buster)
 async function checkQuota() {
   const tgl = document.getElementById("tglKunjungan").value;
   const displayDateText = document.getElementById("displayDateText");
@@ -322,6 +322,7 @@ async function checkQuota() {
 
   if (!tgl) return;
 
+  // Format tanggal ke Bahasa Indonesia untuk Tampilan
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const dateObj = new Date(tgl + 'T00:00:00');
   displayDateText.innerText = dateObj.toLocaleDateString('id-ID', options);
@@ -332,11 +333,13 @@ async function checkQuota() {
     return;
   }
 
+  // Tampilkan Status Loading
   spinner.classList.remove("hidden");
   badgeText.innerText = "Memeriksa Kuota...";
 
   try {
-    const response = await fetch(`${API_URL}?tgl=${tgl}`);
+    // FITUR UTAMA: Tambahkan &_nc=${Date.now()} biar browser tidak nge-cache respon lama
+    const response = await fetch(`${API_URL}?tgl=${tgl}&_nc=${Date.now()}`);
     const data = await response.json();
     spinner.classList.add("hidden");
 
@@ -346,6 +349,7 @@ async function checkQuota() {
       const bookedClinics = data.bookedClinics || [];
       ratioEl.innerText = `${used}/3`;
 
+      // Update Tampilan Badge Kuota Utama
       if (data.isFull || used >= 3) {
         badge.className = "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-300";
         badgeText.innerText = "KUOTA PENUH (0 Slot Tersisa)";
@@ -360,46 +364,50 @@ async function checkQuota() {
         isQuotaAvailable = true;
       }
 
-      // RENDER TRANSPARANSI SLOT
-      slotBreakdownSection.classList.remove("hidden");
-      slotListContainer.innerHTML = "";
+      // Render Rincian Transparansi Slot 1, 2, dan 3
+      if (slotBreakdownSection && slotListContainer) {
+        slotBreakdownSection.classList.remove("hidden");
+        slotListContainer.innerHTML = "";
 
-      for (let i = 0; i < 3; i++) {
-        const slotNum = i + 1;
-        const clinicName = bookedClinics[i];
+        for (let i = 0; i < 3; i++) {
+          const slotNum = i + 1;
+          const clinicName = bookedClinics[i];
 
-        if (clinicName) {
-          // Slot Terisi
-          slotListContainer.innerHTML += `
-            <div class="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">
-              <div>
-                <span class="text-[10px] font-bold text-red-600 uppercase block">Slot ${slotNum} - Terisi</span>
-                <span class="text-xs font-bold text-slate-800">${clinicName}</span>
+          if (clinicName) {
+            // Slot Terisi (Warna Merah)
+            slotListContainer.innerHTML += `
+              <div class="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] font-bold text-red-600 uppercase block">Slot ${slotNum} - Terisi</span>
+                  <span class="text-xs font-bold text-slate-800">${clinicName}</span>
+                </div>
+                <i class="fa-solid fa-lock text-red-500 text-sm"></i>
               </div>
-              <i class="fa-solid fa-lock text-red-500 text-sm"></i>
-            </div>
-          `;
-        } else {
-          // Slot Masih Kosong
-          slotListContainer.innerHTML += `
-            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
-              <div>
-                <span class="text-[10px] font-bold text-emerald-600 uppercase block">Slot ${slotNum} - Tersedia</span>
-                <span class="text-xs font-medium text-emerald-800 italic">Masih Kosong</span>
+            `;
+          } else {
+            // Slot Masih Kosong (Warna Hijau)
+            slotListContainer.innerHTML += `
+              <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] font-bold text-emerald-600 uppercase block">Slot ${slotNum} - Tersedia</span>
+                  <span class="text-xs font-medium text-emerald-800 italic">Masih Kosong</span>
+                </div>
+                <i class="fa-solid fa-lock-open text-emerald-500 text-sm"></i>
               </div>
-              <i class="fa-solid fa-lock-open text-emerald-500 text-sm"></i>
-            </div>
-          `;
+            `;
+          }
         }
       }
 
     } else {
       badgeText.innerText = "Gagal memuat kuota";
+      isQuotaAvailable = false;
     }
   } catch (err) {
     spinner.classList.add("hidden");
     console.error("Error Fetch Kuota:", err);
     badgeText.innerText = "Gagal koneksi API";
+    isQuotaAvailable = false;
   }
 
   updateSubmitButtonState();
