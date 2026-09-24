@@ -52,15 +52,16 @@
 
   <main class="max-w-4xl mx-auto px-4 space-y-6">
 
-    <!-- Status Kuota Card -->
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+  <!-- Status Kuota Card & Rincian Slot -->
+  <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div class="space-y-1">
         <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
           <i class="fa-regular fa-calendar-check"></i> Status Kuota Rujukan Harian
         </div>
         <p class="text-xl font-bold text-slate-800" id="displayDateText">Silakan Pilih Tanggal Kunjungan</p>
       </div>
-
+  
       <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
         <div id="quotaBadge" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
           <i class="fa-solid fa-spinner fa-spin mr-2 hidden" id="quotaSpinner"></i>
@@ -72,6 +73,17 @@
         </div>
       </div>
     </div>
+  
+    <!-- RINCIAN SLOT KLINIK (TRANSPARANSI) -->
+    <div id="slotBreakdownSection" class="hidden border-t border-slate-100 pt-4 mt-2">
+      <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
+        <i class="fa-solid fa-users-viewfinder text-emerald-600"></i> Transparansi Slot Terisi Hari Ini:
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="slotListContainer">
+        <!-- Slot 1, 2, 3 bakal di-render lewat JavaScript di sini -->
+      </div>
+    </div>
+  </div>
 
     <!-- Form Rujukan -->
     <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200">
@@ -296,66 +308,102 @@
       }
     }
 
-    // Cek Kuota Realtime Ke Apps Script
-    async function checkQuota() {
-      const tgl = document.getElementById("tglKunjungan").value;
-      const displayDateText = document.getElementById("displayDateText");
-      const ratioEl = document.getElementById("quotaRatio");
-      const badge = document.getElementById("quotaBadge");
-      const badgeText = document.getElementById("quotaBadgeText");
-      const spinner = document.getElementById("quotaSpinner");
+// Cek Kuota Realtime & Render Transparansi Slot
+async function checkQuota() {
+  const tgl = document.getElementById("tglKunjungan").value;
+  const displayDateText = document.getElementById("displayDateText");
+  const ratioEl = document.getElementById("quotaRatio");
+  const badge = document.getElementById("quotaBadge");
+  const badgeText = document.getElementById("quotaBadgeText");
+  const spinner = document.getElementById("quotaSpinner");
+  
+  const slotBreakdownSection = document.getElementById("slotBreakdownSection");
+  const slotListContainer = document.getElementById("slotListContainer");
 
-      if (!tgl) return;
+  if (!tgl) return;
 
-      // Format tanggal ke Bahasa Indonesia untuk Tampilan
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const dateObj = new Date(tgl + 'T00:00:00');
-      displayDateText.innerText = dateObj.toLocaleDateString('id-ID', options);
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const dateObj = new Date(tgl + 'T00:00:00');
+  displayDateText.innerText = dateObj.toLocaleDateString('id-ID', options);
 
-      if (!API_URL || API_URL.trim() === "") {
-        badge.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
-        badgeText.innerText = "URL API Belum Diisi!";
-        return;
+  if (!API_URL || API_URL.trim() === "") {
+    badge.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
+    badgeText.innerText = "URL API Belum Diisi!";
+    return;
+  }
+
+  spinner.classList.remove("hidden");
+  badgeText.innerText = "Memeriksa Kuota...";
+
+  try {
+    const response = await fetch(`${API_URL}?tgl=${tgl}`);
+    const data = await response.json();
+    spinner.classList.add("hidden");
+
+    if (data.status === "success") {
+      const used = data.count;
+      const remaining = data.remaining;
+      const bookedClinics = data.bookedClinics || [];
+      ratioEl.innerText = `${used}/3`;
+
+      if (data.isFull || used >= 3) {
+        badge.className = "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-300";
+        badgeText.innerText = "KUOTA PENUH (0 Slot Tersisa)";
+        isQuotaAvailable = false;
+      } else if (remaining === 1) {
+        badge.className = "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
+        badgeText.innerText = "Sisa 1 Slot lagi!";
+        isQuotaAvailable = true;
+      } else {
+        badge.className = "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+        badgeText.innerText = `Tersisa ${remaining} Slot`;
+        isQuotaAvailable = true;
       }
 
-      // Show Loading State
-      spinner.classList.remove("hidden");
-      badgeText.innerText = "Memeriksa Kuota...";
+      // RENDER TRANSPARANSI SLOT
+      slotBreakdownSection.classList.remove("hidden");
+      slotListContainer.innerHTML = "";
 
-      try {
-        const response = await fetch(`${API_URL}?tgl=${tgl}`);
-        const data = await response.json();
-        spinner.classList.add("hidden");
+      for (let i = 0; i < 3; i++) {
+        const slotNum = i + 1;
+        const clinicName = bookedClinics[i];
 
-        if (data.status === "success") {
-          const used = data.count;
-          const remaining = data.remaining;
-          ratioEl.innerText = `${used}/3`;
-
-          if (data.isFull || used >= 3) {
-            badge.className = "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-300";
-            badgeText.innerText = "KUOTA PENUH (0 Slot Tersisa)";
-            isQuotaAvailable = false;
-          } else if (remaining === 1) {
-            badge.className = "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300";
-            badgeText.innerText = "Sisa 1 Slot lagi!";
-            isQuotaAvailable = true;
-          } else {
-            badge.className = "inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
-            badgeText.innerText = `Tersisa ${remaining} Slot`;
-            isQuotaAvailable = true;
-          }
+        if (clinicName) {
+          // Slot Terisi
+          slotListContainer.innerHTML += `
+            <div class="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold text-red-600 uppercase block">Slot ${slotNum} - Terisi</span>
+                <span class="text-xs font-bold text-slate-800">${clinicName}</span>
+              </div>
+              <i class="fa-solid fa-lock text-red-500 text-sm"></i>
+            </div>
+          `;
         } else {
-          badgeText.innerText = "Gagal memuat kuota";
+          // Slot Masih Kosong
+          slotListContainer.innerHTML += `
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold text-emerald-600 uppercase block">Slot ${slotNum} - Tersedia</span>
+                <span class="text-xs font-medium text-emerald-800 italic">Masih Kosong</span>
+              </div>
+              <i class="fa-solid fa-lock-open text-emerald-500 text-sm"></i>
+            </div>
+          `;
         }
-      } catch (err) {
-        spinner.classList.add("hidden");
-        console.error("Error Fetch Kuota:", err);
-        badgeText.innerText = "Gagal koneksi API";
       }
 
-      updateSubmitButtonState();
+    } else {
+      badgeText.innerText = "Gagal memuat kuota";
     }
+  } catch (err) {
+    spinner.classList.add("hidden");
+    console.error("Error Fetch Kuota:", err);
+    badgeText.innerText = "Gagal koneksi API";
+  }
+
+  updateSubmitButtonState();
+}
 
     function updateSubmitButtonState() {
       const btn = document.getElementById("submitBtn");
