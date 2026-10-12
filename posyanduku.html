@@ -491,7 +491,7 @@ function styleBadge(elementId, scoreId, zScore, kategori, tipe) {
             const zTbu = hitungZScoreAkurat(tb, barisTbu);
             let katTbu = "Normal"; let tipeTbu = "sukses";
             if (zTbu < -3) { katTbu = "Sangat Pendek (Stunting)"; tipeTbu = "bahaya"; sangatBahaya = true; }
-            else if (zTbu < -2) { katTbu = "Pendek (Stunted)"; tipeTbu = "peringatan"; adaMasalahGizi = true; }
+            else if (zTbu < -2) { katTbu = "Pendek (dalam pemantauan/ Belum stunting)"; tipeTbu = "peringatan"; adaMasalahGizi = true; }
             styleBadge('badgePbu', 'scorePbu', zTbu, katTbu, tipeTbu);
 
             // 3. BB/TB
