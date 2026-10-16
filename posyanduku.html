@@ -361,7 +361,7 @@
                     [22, 78.4, 81.2, 84.0, 87.0, 89.9, 92.7, 95.6],
                     [24, 79.7, 82.7, 85.7, 88.6, 91.7, 94.7, 97.7],
                     [36, 87.4, 90.3, 93.2, 97.1, 101.0, 104.9, 108.8],
-                    [40, 89.2, 90.0, 94.0, 97.7, 101.3, 104.8, 108.4], // Presisi KMS Kemenkes
+                    [40, 89.2, 91.5, 94.8, 98.7, 102.6, 106.5, 110.4],
                     [48, 93.6, 96.2, 99.5, 103.9, 107.8, 111.7, 115.6],
                     [60, 99.9, 102.7, 106.2, 110.5, 115.0, 119.0, 123.0]
                 ],
@@ -696,11 +696,11 @@
                             pointHoverRadius: 10,
                             z: 999
                         },
-                        { label: 'SD +3', data: dataSD3Pos, borderColor: '#dc2626', borderDash: [3,3], fill: false, pointRadius: 0, borderWidth: 1.5 },
-                        { label: 'SD +2', data: dataSD2Pos, borderColor: '#ef4444', fill: false, pointRadius: 0, borderWidth: 1.5 },
-                        { label: 'SD 0 (Ideal)', data: dataMedian, borderColor: '#22c55e', borderWidth: 2.5, fill: false, pointRadius: 0 },
-                        { label: 'SD -2', data: dataSD2Neg, borderColor: '#f59e0b', fill: false, pointRadius: 0, borderWidth: 1.5 },
-                        { label: 'SD -3', data: dataSD3Neg, borderColor: '#dc2626', borderDash: [3,3], fill: false, pointRadius: 0, borderWidth: 1.5 }
+                        { label: 'SD +3', data: dataSD3Pos, borderColor: '#dc2626', borderDash: [3,3], fill: false, pointRadius: 0, borderWidth: 1.5, tension: 0.4 },
+                        { label: 'SD +2', data: dataSD2Pos, borderColor: '#ef4444', fill: false, pointRadius: 0, borderWidth: 1.5, tension: 0.4 },
+                        { label: 'SD 0 (Ideal)', data: dataMedian, borderColor: '#22c55e', borderWidth: 2.5, fill: false, pointRadius: 0, tension: 0.4 },
+                        { label: 'SD -2', data: dataSD2Neg, borderColor: '#f59e0b', fill: false, pointRadius: 0, borderWidth: 1.5, tension: 0.4 },
+                        { label: 'SD -3', data: dataSD3Neg, borderColor: '#dc2626', borderDash: [3,3], fill: false, pointRadius: 0, borderWidth: 1.5, tension: 0.4 }
                     ]
                 },
                 options: {
